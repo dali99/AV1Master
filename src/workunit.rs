@@ -1,6 +1,7 @@
 use std::path::PathBuf;
+use serde::{Serialize, Deserialize};
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Serialize, Deserialize)]
 pub struct WUnit {
     file_name: PathBuf,
     priority: u16,
@@ -10,7 +11,7 @@ pub struct WUnit {
 }
 
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 struct EOptions {
     mode: EMode,
     resolution: Resolution,
@@ -36,7 +37,7 @@ impl Default for EOptions {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 enum EMode {
     // Quality (CRF), Constrained Quality, Variable Bitrate, Constant Bitrate
     Q(u8),
@@ -50,13 +51,13 @@ impl Default for EMode {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Serialize, Deserialize)]
 struct Resolution {
     width: Option<u16>,
     height: Option<u16>
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 enum EColorDepth {
     Eight = 8,
     Ten = 10,
@@ -68,7 +69,7 @@ impl Default for EColorDepth {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 enum EStatus {
     Queued,
     Reserved,
