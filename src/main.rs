@@ -47,8 +47,8 @@ fn get_jobs(shared: State<SharedState>) -> Json<Value> {
 #[get("/request_job")]
 fn request_job(shared: State<SharedState>) -> Result<Json<Value>, NotFound<String>> {
     let mut list: Vec<WUnit> = shared.jobs.lock().unwrap()
-        .values().cloned()
-        .filter(|x| x.status == EStatus::Queued)
+        .values()
+        .filter(|x| x.status == EStatus::Queued).cloned()
         .collect();
 
     list.sort_by(|a, b| b.description.length.cmp(&a.description.length));
@@ -70,20 +70,35 @@ fn get_job(id: Uuid, shared: State<SharedState>) -> Result<Json<Value>, NotFound
     }
 }
 
+#[get("/edit_status/<id>/<status>")]
+fn edit_status(id: Uuid, status: String, shared: State<SharedState>) -> Result<String, Box<std::error::Error>> {
+    let mut list = shared.jobs.lock().unwrap();
+    let job = list.get_mut(&id).ok_or("what")?;
+    let status = match status.as_str() {
+        "queued" => Ok(EStatus::Queued),
+        "reserved" => Ok(EStatus::Reserved),
+        "completed" => Ok(EStatus::Completed),
+        _ => Err("Not a valid status, valid statuses are queued, reserved, completed")
+    }?;
+
+    job.status = status;
+
+    Ok("Status changed".to_string())
+}
+
 #[post("/add_job", format = "json", data = "<message>")]
-fn add_job(message: Json<workunit::WDesc>, shared: State<SharedState>) -> Result<String, String> {
+fn add_job(message: Json<workunit::WDesc>, shared: State<SharedState>) {
     println!("{:#?}", message);
     let job = message.into_inner();
 
     let id = uuid::Uuid::new_v4();
 
     shared.jobs.lock().unwrap().insert(id, WUnit::new(id, job));
-    Ok(format!("{:#?}", shared))
 }
 
 fn main() {
         rocket::ignite()
         .manage(SharedState::default())
-        .mount("/", routes![index, version, get_jobs, get_job, request_job, add_job])
+        .mount("/", routes![index, version, get_jobs, get_job, request_job, edit_status, add_job])
         .launch();
 }

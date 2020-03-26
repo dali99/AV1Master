@@ -97,7 +97,7 @@ impl Default for EColorDepth {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum EStatus {
     Queued,
-    Reserved(Client),
+    Reserved,
     Completed
 }
 impl Default for EStatus {
