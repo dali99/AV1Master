@@ -8,9 +8,9 @@ pub struct WUnit {
     pub status: EStatus
 }
 impl WUnit {
-    pub fn new(description: WDesc) -> Self {
+    pub fn new(id: Uuid, description: WDesc) -> Self {
         WUnit {
-            id: Uuid::new_v4(),
+            id: id,
             description: description,
             status: EStatus::Queued
         }

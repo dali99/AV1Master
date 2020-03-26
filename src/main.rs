@@ -6,9 +6,12 @@ use rocket::response::status::NotFound;
 
 use rocket_contrib::json::Json;
 use serde_json::Value;
+use serde_json::json;
+use serde::{Serialize, Deserialize};
 use rocket_contrib::uuid::Uuid;
 
 use std::sync::Mutex;
+use std::collections::HashMap;
 
 mod workunit;
 use workunit::WUnit;
@@ -18,7 +21,7 @@ const VERSION: &str = "0.1.0";
 
 #[derive(Default, Debug)]
 struct SharedState {
-    list: Mutex<Vec<WUnit>>
+    jobs: Mutex<HashMap<uuid::Uuid, WUnit>>
 }
 
 #[get("/")]
@@ -33,15 +36,21 @@ fn version() -> &'static str {
 
 #[get("/get_jobs")]
 fn get_jobs(shared: State<SharedState>) -> Json<Value> {
-    let list = shared.list.lock().unwrap();
-    Json(serde_json::to_value(&list[..]).unwrap())
+    let list = shared.jobs.lock().unwrap().clone();
+
+    println!("{:#?}", list);
+
+    //Json(json!("god hlep me"))
+    Json(serde_json::to_value(&list).unwrap())
 }
 
 #[get("/request_job")]
 fn request_job(shared: State<SharedState>) -> Result<Json<Value>, NotFound<String>> {
-    let mut list = shared.list.lock().unwrap().clone();
+    let mut list: Vec<WUnit> = shared.jobs.lock().unwrap()
+        .values().cloned()
+        .filter(|x| x.status == EStatus::Queued)
+        .collect();
 
-    list.retain(|x| x.status == EStatus::Queued);
     list.sort_by(|a, b| b.description.length.cmp(&a.description.length));
 
     let job = list.get(0);
@@ -51,9 +60,9 @@ fn request_job(shared: State<SharedState>) -> Result<Json<Value>, NotFound<Strin
 
 #[get("/get_job/<id>")]
 fn get_job(id: Uuid, shared: State<SharedState>) -> Result<Json<Value>, NotFound<String>> {
-    let list = shared.list.lock().unwrap().clone();
+    let list = shared.jobs.lock().unwrap();
 
-    let job = list.into_iter().find(|x| x.id == *id).ok_or(NotFound(format!("Job not Found: {id}", id = id)));
+    let job = list.get(&id).ok_or(NotFound(format!("Job not Found: {id}", id = id)));
 
     match job {
         Ok(j) => Ok(Json(serde_json::to_value(&j).unwrap())),
@@ -65,7 +74,10 @@ fn get_job(id: Uuid, shared: State<SharedState>) -> Result<Json<Value>, NotFound
 fn add_job(message: Json<workunit::WDesc>, shared: State<SharedState>) -> Result<String, String> {
     println!("{:#?}", message);
     let job = message.into_inner();
-    shared.list.lock().unwrap().push(WUnit::new(job));
+
+    let id = uuid::Uuid::new_v4();
+
+    shared.jobs.lock().unwrap().insert(id, WUnit::new(id, job));
     Ok(format!("{:#?}", shared))
 }
 
