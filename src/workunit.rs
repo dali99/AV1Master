@@ -1,24 +1,36 @@
-use std::path::PathBuf;
 use serde::{Serialize, Deserialize};
+use uuid::Uuid;
 
 #[derive(Default, Debug, Serialize, Deserialize, Clone)]
 pub struct WUnit {
-    pub id: u32,
+    pub id: Uuid,
+    pub description: WDesc,
+    pub status: EStatus
+}
+impl WUnit {
+    pub fn new(description: WDesc) -> Self {
+        WUnit {
+            id: Uuid::new_v4(),
+            description: description,
+            status: EStatus::Queued
+        }
+    }
+}
+
+#[derive(Default, Debug, Serialize, Deserialize, Clone)]
+pub struct WDesc {
     pub file_url: String,
     pub priority: u16,
     pub length: u32,
     pub options: EOptions,
-    pub status: EStatus
 }
-impl WUnit {
-    pub fn new(id: u32, file_url: &str, priority: Option<u16>, length: u32, options: EOptions) -> Self {
-        WUnit {
-            id: id,
+impl WDesc {
+    pub fn new(file_url: &str, priority: Option<u16>, length: u32, options: Option<EOptions>) -> Self {
+        WDesc {
             file_url: file_url.to_string(),
             priority: priority.unwrap_or(0),
             length: length,
-            options: options,
-            status: EStatus::default()
+            options: options.unwrap_or(EOptions::default()),
         }
     }
 }
@@ -27,7 +39,7 @@ impl WUnit {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct EOptions {
     pub mode: EMode,
-    pub resolution: Resolution,
+    pub resolution: Option<Resolution>,
     pub color_depth: EColorDepth,
     pub enable_fwd_keyframe: bool,
     pub kf_min_dist: Option<u16>,
@@ -39,7 +51,7 @@ impl Default for EOptions {
     fn default() -> Self {
         EOptions{
             mode: EMode::default(),
-            resolution: Resolution::default(),
+            resolution: Option::default(),
             color_depth: EColorDepth::default(),
             enable_fwd_keyframe: true,
             kf_min_dist: Option::default(),
@@ -66,8 +78,8 @@ impl Default for EMode {
 
 #[derive(Default, Debug, Serialize, Deserialize, Clone)]
 pub struct Resolution {
-    pub width: Option<u16>,
-    pub height: Option<u16>
+    pub width: u16,
+    pub height: u16
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]

@@ -6,8 +6,8 @@ use rocket::response::status::NotFound;
 
 use rocket_contrib::json::Json;
 use serde_json::Value;
+use rocket_contrib::uuid::Uuid;
 
-use std::path::PathBuf;
 use std::sync::Mutex;
 
 mod workunit;
@@ -42,7 +42,7 @@ fn request_job(shared: State<SharedState>) -> Result<Json<Value>, NotFound<Strin
     let mut list = shared.list.lock().unwrap().clone();
 
     list.retain(|x| x.status == EStatus::Queued);
-    list.sort_by(|a, b| b.length.cmp(&a.length));
+    list.sort_by(|a, b| b.description.length.cmp(&a.description.length));
 
     let job = list.get(0);
 
@@ -50,10 +50,10 @@ fn request_job(shared: State<SharedState>) -> Result<Json<Value>, NotFound<Strin
 }
 
 #[get("/get_job/<id>")]
-fn get_job(id: u32, shared: State<SharedState>) -> Result<Json<Value>, NotFound<String>> {
+fn get_job(id: Uuid, shared: State<SharedState>) -> Result<Json<Value>, NotFound<String>> {
     let list = shared.list.lock().unwrap().clone();
 
-    let job = list.into_iter().find(|x| x.id == id).ok_or(NotFound(format!("Job not Found: {id}", id = id)));
+    let job = list.into_iter().find(|x| x.id == *id).ok_or(NotFound(format!("Job not Found: {id}", id = id)));
 
     match job {
         Ok(j) => Ok(Json(serde_json::to_value(&j).unwrap())),
@@ -61,9 +61,11 @@ fn get_job(id: u32, shared: State<SharedState>) -> Result<Json<Value>, NotFound<
     }
 }
 
-#[post("/add_job")]
-fn add_job(shared: State<SharedState>) -> Result<String, std::io::Error> {
-    shared.list.lock().unwrap().push(WUnit::new(2, "iduno", None, 10, workunit::EOptions::default()));
+#[post("/add_job", format = "json", data = "<message>")]
+fn add_job(message: Json<workunit::WDesc>, shared: State<SharedState>) -> Result<String, String> {
+    println!("{:#?}", message);
+    let job = message.into_inner();
+    shared.list.lock().unwrap().push(WUnit::new(job));
     Ok(format!("{:#?}", shared))
 }
 
