@@ -12,6 +12,7 @@ use std::sync::Mutex;
 
 mod workunit;
 use workunit::WUnit;
+use workunit::EStatus;
 
 const VERSION: &str = "0.1.0";
 
@@ -31,40 +32,44 @@ fn version() -> &'static str {
 }
 
 #[get("/get_jobs")]
-fn getJobs(shared: State<SharedState>) -> Json<Value> {
-//    let shared_data: &SharedState = shared.inner();
+fn get_jobs(shared: State<SharedState>) -> Json<Value> {
     let list = shared.list.lock().unwrap();
-
-    println!("get jobs blah");
-    // println!("{:#?}", Json(list));
-
     Json(serde_json::to_value(&list[..]).unwrap())
 }
 
-#[get("/get_job/<id>")]
-fn getJob(id: usize, shared: State<SharedState>) -> Result<String, NotFound<String>> {
-    let shared_data: &SharedState = shared.inner();
-    let list = shared_data.list.lock().unwrap();
+#[get("/request_job")]
+fn request_job(shared: State<SharedState>) -> Result<Json<Value>, NotFound<String>> {
+    let mut list = shared.list.lock().unwrap().clone();
 
-    let job = list.get(id).ok_or(NotFound(format!("Job not Found: {id}", id = id)));
+    list.retain(|x| x.status == EStatus::Queued);
+    list.sort_by(|a, b| b.length.cmp(&a.length));
+
+    let job = list.get(0);
+
+    Ok(Json(serde_json::to_value(&job).unwrap()))
+}
+
+#[get("/get_job/<id>")]
+fn get_job(id: u32, shared: State<SharedState>) -> Result<Json<Value>, NotFound<String>> {
+    let list = shared.list.lock().unwrap().clone();
+
+    let job = list.into_iter().find(|x| x.id == id).ok_or(NotFound(format!("Job not Found: {id}", id = id)));
 
     match job {
-        Ok(j) => Ok(format!("{:#?}", j)),
+        Ok(j) => Ok(Json(serde_json::to_value(&j).unwrap())),
         Err(e) => Err(e)
     }
 }
 
-#[get("/add_job")]
-fn addJob(shared: State<SharedState>) -> Result<String, std::io::Error> {
-    let shared_data: &SharedState = shared.inner();
-
-    shared_data.list.lock().unwrap().push(WUnit::default());
-    Ok(format!("{:#?}", shared_data))
+#[post("/add_job")]
+fn add_job(shared: State<SharedState>) -> Result<String, std::io::Error> {
+    shared.list.lock().unwrap().push(WUnit::new(2, "iduno", None, 10, workunit::EOptions::default()));
+    Ok(format!("{:#?}", shared))
 }
 
 fn main() {
-    rocket::ignite()
+        rocket::ignite()
         .manage(SharedState::default())
-        .mount("/", routes![index, version, getJobs, getJob, addJob])
+        .mount("/", routes![index, version, get_jobs, get_job, request_job, add_job])
         .launch();
 }

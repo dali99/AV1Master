@@ -1,26 +1,39 @@
 use std::path::PathBuf;
 use serde::{Serialize, Deserialize};
 
-#[derive(Default, Debug, Serialize, Deserialize)]
+#[derive(Default, Debug, Serialize, Deserialize, Clone)]
 pub struct WUnit {
-    file_name: PathBuf,
-    priority: u16,
-    length: u32,
-    options: EOptions,
-    status: EStatus
+    pub id: u32,
+    pub file_url: String,
+    pub priority: u16,
+    pub length: u32,
+    pub options: EOptions,
+    pub status: EStatus
+}
+impl WUnit {
+    pub fn new(id: u32, file_url: &str, priority: Option<u16>, length: u32, options: EOptions) -> Self {
+        WUnit {
+            id: id,
+            file_url: file_url.to_string(),
+            priority: priority.unwrap_or(0),
+            length: length,
+            options: options,
+            status: EStatus::default()
+        }
+    }
 }
 
 
-#[derive(Debug, Serialize, Deserialize)]
-struct EOptions {
-    mode: EMode,
-    resolution: Resolution,
-    color_depth: EColorDepth,
-    enable_fwd_keyframe: bool,
-    kf_min_dist: Option<u16>,
-    kf_max_dist: Option<u16>,
-    two_pass: bool,
-    speed: u8
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct EOptions {
+    pub mode: EMode,
+    pub resolution: Resolution,
+    pub color_depth: EColorDepth,
+    pub enable_fwd_keyframe: bool,
+    pub kf_min_dist: Option<u16>,
+    pub kf_max_dist: Option<u16>,
+    pub two_pass: bool,
+    pub speed: u8
 }
 impl Default for EOptions {
     fn default() -> Self {
@@ -37,8 +50,8 @@ impl Default for EOptions {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-enum EMode {
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+pub enum EMode {
     // Quality (CRF), Constrained Quality, Variable Bitrate, Constant Bitrate
     Q(u8),
     CQ(u8),
@@ -51,14 +64,14 @@ impl Default for EMode {
     }
 }
 
-#[derive(Default, Debug, Serialize, Deserialize)]
-struct Resolution {
-    width: Option<u16>,
-    height: Option<u16>
+#[derive(Default, Debug, Serialize, Deserialize, Clone)]
+pub struct Resolution {
+    pub width: Option<u16>,
+    pub height: Option<u16>
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-enum EColorDepth {
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+pub enum EColorDepth {
     Eight = 8,
     Ten = 10,
     Twelve = 12
@@ -69,10 +82,10 @@ impl Default for EColorDepth {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-enum EStatus {
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+pub enum EStatus {
     Queued,
-    Reserved,
+    Reserved(Client),
     Completed
 }
 impl Default for EStatus {
@@ -80,3 +93,5 @@ impl Default for EStatus {
         EStatus::Queued
     }
 }
+
+type Client = String;
