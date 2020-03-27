@@ -4,7 +4,7 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-base_url="http://localhost:8000"
+base_url="$2"
 
 upload() { for f; do echo $(curl -#Sf -F "files[]=@$f" https://pomf.dodsorf.as/upload\?output\=text); done }
 

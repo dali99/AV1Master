@@ -4,8 +4,8 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-base_url="http://localhost:8000"
-version="0.1.0"
+base_url="$1"
+version="0.2.0"
 
 while true; do
     sleep 1
@@ -52,14 +52,16 @@ while true; do
 
     speed=`echo $job | jq -r .description.options.speed`
 
-    ffmpeg -i "$input" -vf scale=$width:$height -f yuv4mpegpipe - | aomenc - --lag-in-frames=25 --tile-columns=0 --tile-rows=0 --enable-fwd-kf=1 \
+    ffmpeg -nostats -i "$input" -vf scale=$width:$height -f yuv4mpegpipe - | aomenc - --lag-in-frames=25 --tile-columns=0 --tile-rows=0 --enable-fwd-kf=1 \
         --target-bitrate=$target_bitrate --width="$width" --height="$height" --bit-depth=$color_depth --kf-min-dist=$kf_min_dist --kf-max-dist=$kf_min_dist \
         --cpu-used=$speed \
         --pass=1 --passes=2 --fpf="$input.$target_bitrate.$width.$height.$color_depth.fpf" --webm -o "$input.$target_bitrate.$width.$height.$color_depth.webm"
 
-    ffmpeg -i "$input" -vf scale=$width:$height -f yuv4mpegpipe - | aomenc - --lag-in-frames=25 --tile-columns=0 --tile-rows=0 --enable-fwd-kf=1 \
+    ffmpeg -nostats -i "$input" -vf scale=$width:$height -f yuv4mpegpipe - | aomenc - --lag-in-frames=25 --tile-columns=0 --tile-rows=0 --enable-fwd-kf=1 \
         --target-bitrate=$target_bitrate --width="$width" --height="$height" --bit-depth=$color_depth --kf-min-dist=$kf_min_dist --kf-max-dist=$kf_min_dist \
         --cpu-used=$speed \
         --pass=2 --passes=2 --fpf="$input.$target_bitrate.$width.$height.$color_depth.fpf" --webm -o "$input.$target_bitrate.$width.$height.$color_depth.webm"
+
+    curl -s -L "$base_url"/edit_status/"$job_id"/completed
 
 done
