@@ -5,10 +5,10 @@ set -euo pipefail
 IFS=$'\n\t'
 
 base_url="$1"
-version="0.2.0"
+version="0.1.0"
 
 while true; do
-    sleep 1
+    sleep 30
     upsteam_version=`curl -s "$base_url"/version`
     if [[ $version != $upsteam_version ]]; then
         break
@@ -52,13 +52,15 @@ while true; do
 
     speed=`echo $job | jq -r .description.options.speed`
 
-    ffmpeg -nostats -i "$input" -vf scale=$width:$height -f yuv4mpegpipe - | aomenc - --lag-in-frames=25 --tile-columns=0 --tile-rows=0 --enable-fwd-kf=1 \
-        --target-bitrate=$target_bitrate --width="$width" --height="$height" --bit-depth=$color_depth --kf-min-dist=$kf_min_dist --kf-max-dist=$kf_min_dist \
+    ffmpeg -nostats -hide_banner -loglevel warning \
+        -i "$input" -vf scale=$width:$height -f yuv4mpegpipe - | aomenc - --lag-in-frames=25 --tile-columns=0 --tile-rows=0 --enable-fwd-kf=1 \
+        --target-bitrate=$target_bitrate --width="$width" --height="$height" --bit-depth=$color_depth --kf-min-dist=$kf_min_dist --kf-max-dist=$kf_max_dist \
         --cpu-used=$speed \
         --pass=1 --passes=2 --fpf="$input.$target_bitrate.$width.$height.$color_depth.fpf" --webm -o "$input.$target_bitrate.$width.$height.$color_depth.webm"
 
-    ffmpeg -nostats -i "$input" -vf scale=$width:$height -f yuv4mpegpipe - | aomenc - --lag-in-frames=25 --tile-columns=0 --tile-rows=0 --enable-fwd-kf=1 \
-        --target-bitrate=$target_bitrate --width="$width" --height="$height" --bit-depth=$color_depth --kf-min-dist=$kf_min_dist --kf-max-dist=$kf_min_dist \
+    ffmpeg -nostats -hide_banner -loglevel warning \
+        -i "$input" -vf scale=$width:$height -f yuv4mpegpipe - | aomenc - --lag-in-frames=25 --tile-columns=0 --tile-rows=0 --enable-fwd-kf=1 \
+        --target-bitrate=$target_bitrate --width="$width" --height="$height" --bit-depth=$color_depth --kf-min-dist=$kf_min_dist --kf-max-dist=$kf_max_dist \
         --cpu-used=$speed \
         --pass=2 --passes=2 --fpf="$input.$target_bitrate.$width.$height.$color_depth.fpf" --webm -o "$input.$target_bitrate.$width.$height.$color_depth.webm"
 
