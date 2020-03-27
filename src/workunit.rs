@@ -1,4 +1,5 @@
 use serde::{Serialize, Deserialize};
+use serde_repr::*;
 use uuid::Uuid;
 
 #[derive(Default, Debug, Serialize, Deserialize, Clone)]
@@ -20,14 +21,16 @@ impl WUnit {
 #[derive(Default, Debug, Serialize, Deserialize, Clone)]
 pub struct WDesc {
     pub file_url: String,
+    pub file_name: String,
     pub priority: u16,
     pub length: u32,
     pub options: EOptions,
 }
 impl WDesc {
-    pub fn new(file_url: &str, priority: Option<u16>, length: u32, options: Option<EOptions>) -> Self {
+    pub fn new(file_url: &str, file_name: &str, priority: Option<u16>, length: u32, options: Option<EOptions>) -> Self {
         WDesc {
             file_url: file_url.to_string(),
+            file_name: file_name.to_string(),
             priority: priority.unwrap_or(0),
             length: length,
             options: options.unwrap_or(EOptions::default()),
@@ -82,7 +85,8 @@ pub struct Resolution {
     pub height: u16
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Serialize_repr, Deserialize_repr, PartialEq, Clone)]
+#[repr(u8)]
 pub enum EColorDepth {
     Eight = 8,
     Ten = 10,
