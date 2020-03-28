@@ -24,15 +24,17 @@ pub struct WDesc {
     pub file_name: String,
     pub priority: u16,
     pub length: u32,
-    pub options: EOptions,
+    pub resolution: (u16, u16),
+    pub options: EOptions
 }
 impl WDesc {
-    pub fn new(file_url: &str, file_name: &str, priority: Option<u16>, length: u32, options: Option<EOptions>) -> Self {
+    pub fn new(file_url: &str, file_name: &str, priority: Option<u16>, length: u32, resolution: (u16, u16), options: Option<EOptions>) -> Self {
         WDesc {
             file_url: file_url.to_string(),
             file_name: file_name.to_string(),
             priority: priority.unwrap_or(0),
             length: length,
+            resolution: resolution,
             options: options.unwrap_or(EOptions::default()),
         }
     }
@@ -43,7 +45,7 @@ impl WDesc {
 pub struct EOptions {
     pub ffmpeg: String,
     pub aomenc: String,
-    pub two_pass: bool
+    pub two_pass: bool,
 }
 impl Default for EOptions {
     fn default() -> Self {
