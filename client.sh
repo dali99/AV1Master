@@ -5,7 +5,7 @@ set -euo pipefail
 IFS=$'\n\t'
 
 base_url="$1"
-version="0.1.0"
+version="0.2.0"
 
 while true; do
     sleep 30
@@ -43,26 +43,28 @@ while true; do
 
     echo "Starting Encode"
 
-    target_bitrate=`echo $job | jq -r .description.options.mode.VBR`
-    width=`echo $job | jq -r .description.options.resolution.width`
-    height=`echo $job | jq -r .description.options.resolution.height`
-    color_depth=`echo $job | jq -r .description.options.color_depth`
-    kf_min_dist=`echo $job | jq -r .description.options.kf_min_dist`
-    kf_max_dist=`echo $job | jq -r .description.options.kf_max_dist`
+    aomenco=`echo $job | jq -r .description.options.aomenc`
+    aomenco=${aomenco//[^a-zA-Z0-9_\- =]/}
+    ffmpego=`echo $job | jq -r .description.options.ffmpeg`
+    ffmpego=${ffmpego//[^a-zA-Z0-9_\- =:]/}
 
-    speed=`echo $job | jq -r .description.options.speed`
+    two_pass=`echo $job | jq -r .description.options.two_pass`
 
-    ffmpeg -nostats -hide_banner -loglevel warning \
-        -i "$input" -vf scale=$width:$height -f yuv4mpegpipe - | aomenc - --lag-in-frames=25 --tile-columns=0 --tile-rows=0 --enable-fwd-kf=1 \
-        --target-bitrate=$target_bitrate --width="$width" --height="$height" --bit-depth=$color_depth --kf-min-dist=$kf_min_dist --kf-max-dist=$kf_max_dist \
-        --cpu-used=$speed \
-        --pass=1 --passes=2 --fpf="$input.$target_bitrate.$width.$height.$color_depth.fpf" --webm -o "$input.$target_bitrate.$width.$height.$color_depth.webm"
+    echo $two_pass
 
-    ffmpeg -nostats -hide_banner -loglevel warning \
-        -i "$input" -vf scale=$width:$height -f yuv4mpegpipe - | aomenc - --lag-in-frames=25 --tile-columns=0 --tile-rows=0 --enable-fwd-kf=1 \
-        --target-bitrate=$target_bitrate --width="$width" --height="$height" --bit-depth=$color_depth --kf-min-dist=$kf_min_dist --kf-max-dist=$kf_max_dist \
-        --cpu-used=$speed \
-        --pass=2 --passes=2 --fpf="$input.$target_bitrate.$width.$height.$color_depth.fpf" --webm -o "$input.$target_bitrate.$width.$height.$color_depth.webm"
+    if [[ $two_pass = true ]]; then
+        eval 'ffmpeg -nostats -hide_banner -loglevel warning \
+        -i "'$input'" '$ffmpego' -pix_fmt yuv444p -f yuv4mpegpipe - | aomenc - --i444 '$aomenco' \
+        --pass=1 --passes=2 --fpf="'$input'.fpf" --webm -o "'$input'.out.webm"'
+
+        eval 'ffmpeg -nostats -hide_banner -loglevel warning \
+            -i "'$input'" '$ffmpego' -pix_fmt yuv444p -f yuv4mpegpipe - | aomenc - --i444 '$aomenco' \
+            --pass=2 --passes=2 --fpf="'$input.fpf'" --webm -o "'$input'.out.webm"'
+    else
+        eval 'ffmpeg -nostats -hide_banner -loglevel warning \
+            -i "'$input'" '$ffmpego' -pix_fmt yuv444p -f yuv4mpegpipe - | aomenc - --i444 '$aomenco' \
+            --passes=1 --fpf="'$input.fpf'" --webm -o "'$input.out.webm'"'
+    fi
 
     curl -s -L "$base_url"/edit_status/"$job_id"/completed
 

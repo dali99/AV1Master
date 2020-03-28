@@ -11,22 +11,14 @@ curl "$base_url"/get_jobs | jq
 curl "$base_url"/add_job -X POST -H "Content-Type: application/json" -d \
 '
     {
-        "file_url": "https://pomf.dodsorf.as/f/38ez7v.mkv",
+        "file_url": "https://pomf.dodsorf.as/f/vz9dtl.mkv",
         "file_name": "014",
         "priority": 0,
         "length": 15,
         "options": {
-            "mode": { "VBR": 33 },
-            "color_depth": 10,
-            "enable_fwd_keyframe": true,
-            "two_pass": true,
-            "speed": 0,
-            "resolution": {
-                "width": 960,
-                "height": 540
-            },
-            "kf_min_dist": 9999,
-            "kf_max_dist": 9999
+            "aomenc": "--lag-in-frames=25 --tile-columns=0 --tile-rows=0 --enable-fwd-kf=1 --bit-depth=10 --cpu-used=0 --end-usage=vbr --target-bitrate=60 --kf-min-dist=9999 --kf-max-dist=9999",
+            "ffmpeg": "-vf scale=540:960",
+            "two_pass": true
         }
     }
 '

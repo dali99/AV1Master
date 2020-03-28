@@ -41,73 +41,30 @@ impl WDesc {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct EOptions {
-    pub mode: EMode,
-    pub resolution: Option<Resolution>,
-    pub color_depth: EColorDepth,
-    pub enable_fwd_keyframe: bool,
-    pub kf_min_dist: Option<u16>,
-    pub kf_max_dist: Option<u16>,
-    pub two_pass: bool,
-    pub speed: u8
+    pub ffmpeg: String,
+    pub aomenc: String,
+    pub two_pass: bool
 }
 impl Default for EOptions {
     fn default() -> Self {
         EOptions{
-            mode: EMode::default(),
-            resolution: Option::default(),
-            color_depth: EColorDepth::default(),
-            enable_fwd_keyframe: true,
-            kf_min_dist: Option::default(),
-            kf_max_dist: Option::default(),
-            two_pass: false,
-            speed: 3
+            ffmpeg: String::default(),
+            aomenc: "--lag-in-frames=25 --tile-columns=0 --tile-rows=0 --enable-fwd-kf=1 --bit-depth=10 --cpu-used=3 --cq-level=30 --end-usage=q".to_string(),
+            two_pass: false
         }
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
-pub enum EMode {
-    // Quality (CRF), Constrained Quality, Variable Bitrate, Constant Bitrate
-    Q(u8),
-    CQ(u8),
-    VBR(u32),
-    CBR(u32)
-}
-impl Default for EMode {
-    fn default() -> Self {
-        EMode::Q(30)
-    }
-}
-
-#[derive(Default, Debug, Serialize, Deserialize, Clone)]
-pub struct Resolution {
-    pub width: u16,
-    pub height: u16
-}
-
-#[derive(Debug, Serialize_repr, Deserialize_repr, PartialEq, Clone)]
-#[repr(u8)]
-pub enum EColorDepth {
-    Eight = 8,
-    Ten = 10,
-    Twelve = 12
-}
-impl Default for EColorDepth {
-    fn default() -> Self {
-        EColorDepth::Ten
     }
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum EStatus {
     Queued,
-    Reserved,
-    Completed
+    Reserved(String),
+    Completed(String),
+    Cancelled,
+    Error(String)
 }
 impl Default for EStatus {
     fn default() -> Self {
         EStatus::Queued
     }
 }
-
-type Client = String;
