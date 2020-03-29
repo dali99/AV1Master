@@ -22,9 +22,10 @@ for file in $files; do
         "file_name": "'$file_name'",
         "priority": 0,
         "length": '$length',
+        "resolution": [1080, 1920],
         "options": {
             "aomenc": "--lag-in-frames=25 --tile-columns=0 --tile-rows=0 --enable-fwd-kf=1 --bit-depth=10 --cpu-used=0 --end-usage=vbr --target-bitrate=60 --kf-min-dist=9999 --kf-max-dist=9999",
-            "ffmpeg": "-vf scale=540:960",
+            "ffmpeg": "",
             "two_pass": true
         }
     }
