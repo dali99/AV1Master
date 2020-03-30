@@ -5,19 +5,19 @@ set -euo pipefail
 IFS=$'\n\t'
 
 base_url="$1"
-version="0.3.0"
+version="0.2.0"
 
 while true; do
     sleep 30
     set +e
-    upstream_version=`curl -s "$base_url"/version`
+    upsteam_version=`curl -s "$base_url"/version`
     retval=$?
     set -e
     if [ $retval -ne 0 ]; then
         echo "Is the Job Server Down?"
         continue
     fi
-    if [[ $version != $upstream_version ]]; then
+    if [[ $version != $upsteam_version ]]; then
         echo "Wrong version: client version is $version, while job server requires $upstream_version"
         break
     fi
@@ -32,9 +32,9 @@ while true; do
     fi
 
     echo "Got new job!"
-    printf "%s\n" "$job" | jq
+    echo "$job" | jq
 
-    job_id=`printf "%s\n" "$job" | jq -r .id`
+    job_id=`echo "$job" | jq -r .id`
 
     echo "Reserving Job"
     set +e
@@ -45,16 +45,15 @@ while true; do
         echo "Is the Job Server Down?"
         continue
     fi
-    echo ""
     echo "Reserved!"
 
-    source=`printf "%s\n" "$job" | jq -r .description.file_url`
+    source=`echo $job | jq -r .description.file_url`
     sourceext=${source##*.}
     echo "Downloading source file: $source"
     
-    source=`printf "%s\n" "$job" | jq -r .description.file_url`
+    source=`echo $job | jq -r .description.file_url`
 
-    name=`printf "%s\n" "$job" | jq -r .description.file_name`
+    name=`echo $job | jq -r .description.file_name`
     input="$name.$job_id.$sourceext"
 
     set +e
@@ -64,7 +63,6 @@ while true; do
     if [ $retval -ne 0 ]; then
         echo "Could not Download file!"
         curl -s -L "$base_url"/edit_status/"$job_id"/error || true
-        echo ""
         continue
     fi
 
@@ -72,17 +70,17 @@ while true; do
 
     echo "Starting Encode"
 
-    height=`printf "%s\n" $job | jq -r .description.resolution[0]`
-    width=`printf "%s\n" $job | jq -r .description.resolution[1]`
+    height=`echo $job | jq -r .description.resolution[0]`
+    width=`echo $job | jq -r .description.resolution[1]`
 
-    printf "%s\n" "$job" | jq
+    echo $job | jq
 
-    aomenco=`printf "%s\n" "$job" | jq -r .description.options.aomenc`
+    aomenco=`echo $job | jq -r .description.options.aomenc`
     aomenco=${aomenco//[^a-zA-Z0-9_\- =]/}
-    ffmpego=`printf "%s\n" "$job" | jq -r .description.options.ffmpeg`
+    ffmpego=`echo $job | jq -r .description.options.ffmpeg`
     ffmpego=${ffmpego//[^a-zA-Z0-9_\- =:]/}
 
-    two_pass=`printf "%s\n" "$job" | jq -r .description.options.two_pass`
+    two_pass=`echo $job | jq -r .description.options.two_pass`
 
     if [[ $two_pass = true ]]; then
         set +e
@@ -127,15 +125,25 @@ while true; do
         set -e
     fi
 
-    echo "Marking as complete"
-
     set +e
     curl -s -L "$base_url"/edit_status/"$job_id"/completed
     set -e
 
-    echo ""
+    
+    echo "Uploading file!"
 
-    echo "Deleting Temporary files"
-    rm "$input" "$input".fpf
+    set +e
+    curl --data-binary @"$input".out.webm "$base_url"/upload/"$job_id"
+    set -e
+    retval=$?
+    echo ""
+    if [ $retval -ne 0 ]; then
+        echo "Couldn't upload file!"
+        continue
+    else
+        echo "Upload finished, deleting result!"
+        rm "$input".out.webm
+    fi
+
 
 done
