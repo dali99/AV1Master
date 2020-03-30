@@ -2,6 +2,8 @@ use serde::{Serialize, Deserialize};
 use serde_repr::*;
 use uuid::Uuid;
 
+use std::net::IpAddr;
+
 #[derive(Default, Debug, Serialize, Deserialize, Clone)]
 pub struct WUnit {
     pub id: Uuid,

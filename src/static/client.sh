@@ -10,14 +10,14 @@ version="0.2.0"
 while true; do
     sleep 30
     set +e
-    upsteam_version=`curl -s "$base_url"/version`
+    upstream_version=`curl -s "$base_url"/version`
     retval=$?
     set -e
     if [ $retval -ne 0 ]; then
         echo "Is the Job Server Down?"
         continue
     fi
-    if [[ $version != $upsteam_version ]]; then
+    if [[ $version != $upstream_version ]]; then
         echo "Wrong version: client version is $version, while job server requires $upstream_version"
         break
     fi
@@ -32,9 +32,9 @@ while true; do
     fi
 
     echo "Got new job!"
-    echo "$job" | jq
+    printf "%s\n" "$job" | jq
 
-    job_id=`echo "$job" | jq -r .id`
+    job_id=`printf "%s\n" "$job" | jq -r .id`
 
     echo "Reserving Job"
     set +e
@@ -47,13 +47,13 @@ while true; do
     fi
     echo "Reserved!"
 
-    source=`echo $job | jq -r .description.file_url`
+    source=`printf "%s\n" "$job" | jq -r .description.file_url`
     sourceext=${source##*.}
     echo "Downloading source file: $source"
     
-    source=`echo $job | jq -r .description.file_url`
+    source=`printf "%s\n" "$job" | jq -r .description.file_url`
 
-    name=`echo $job | jq -r .description.file_name`
+    name=`printf "%s\n" "$job" | jq -r .description.file_name`
     input="$name.$job_id.$sourceext"
 
     set +e
@@ -63,6 +63,7 @@ while true; do
     if [ $retval -ne 0 ]; then
         echo "Could not Download file!"
         curl -s -L "$base_url"/edit_status/"$job_id"/error || true
+        echo ""
         continue
     fi
 
@@ -70,17 +71,17 @@ while true; do
 
     echo "Starting Encode"
 
-    height=`echo $job | jq -r .description.resolution[0]`
-    width=`echo $job | jq -r .description.resolution[1]`
+    height=`printf "%s\n" $job | jq -r .description.resolution[0]`
+    width=`printf "%s\n" $job | jq -r .description.resolution[1]`
 
-    echo $job | jq
+    printf "%s\n" "$job" | jq
 
-    aomenco=`echo $job | jq -r .description.options.aomenc`
+    aomenco=`printf "%s\n" "$job" | jq -r .description.options.aomenc`
     aomenco=${aomenco//[^a-zA-Z0-9_\- =]/}
-    ffmpego=`echo $job | jq -r .description.options.ffmpeg`
+    ffmpego=`printf "%s\n" "$job" | jq -r .description.options.ffmpeg`
     ffmpego=${ffmpego//[^a-zA-Z0-9_\- =:]/}
 
-    two_pass=`echo $job | jq -r .description.options.two_pass`
+    two_pass=`printf "%s\n" "$job" | jq -r .description.options.two_pass`
 
     if [[ $two_pass = true ]]; then
         set +e
