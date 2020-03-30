@@ -118,11 +118,8 @@ fn upload(id: Uuid, video: Data, shared: State<SharedState>) -> Result<String, s
 
 #[post("/add_job", format = "json", data = "<message>")]
 fn add_job(message: Json<workunit::WDesc>, shared: State<SharedState>) {
-    println!("{:#?}", message);
     let job = message.into_inner();
-
     let id = uuid::Uuid::new_v4();
-
     shared.jobs.lock().unwrap().insert(id, WUnit::new(id, job));
 }
 
