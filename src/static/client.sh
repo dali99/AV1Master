@@ -5,7 +5,7 @@ set -euo pipefail
 IFS=$'\n\t'
 
 base_url="$1"
-version="0.2.0"
+version="0.4.0"
 
 while true; do
     sleep 30
