@@ -5,7 +5,7 @@ set -euo pipefail
 IFS=$'\n\t'
 
 base_url="$1"
-version="0.2.0"
+version="0.3.0"
 
 while true; do
     sleep 30
@@ -127,8 +127,15 @@ while true; do
         set -e
     fi
 
+    echo "Marking as complete"
+
     set +e
     curl -s -L "$base_url"/edit_status/"$job_id"/completed
     set -e
+
+    echo ""
+
+    echo "Deleting Temporary files"
+    rm "$input" "$input".fpf
 
 done

@@ -3,6 +3,7 @@
 #[macro_use] extern crate rocket;
 use rocket::State;
 use rocket::response::status::NotFound;
+use rocket::Data;
 
 use rocket_contrib::json::Json;
 use serde_json::Value;
@@ -102,6 +103,14 @@ fn edit_status(id: Uuid, status: String, shared: State<SharedState>, remote_addr
 
     Ok("Status changed".to_string())
 }
+
+
+
+#[post("/", data = "<video>")]
+fn upload(video: Data) -> Result<String, std::io::Error> {
+
+}
+
 
 #[post("/add_job", format = "json", data = "<message>")]
 fn add_job(message: Json<workunit::WDesc>, shared: State<SharedState>) {
