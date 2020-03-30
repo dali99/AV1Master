@@ -41,9 +41,6 @@ fn version() -> &'static str {
 #[get("/get_jobs")]
 fn get_jobs(shared: State<SharedState>) -> Json<Value> {
     let list = shared.jobs.lock().unwrap().clone();
-
-    println!("{:#?}", list);
-
     Json(serde_json::to_value(&list).unwrap())
 }
 
