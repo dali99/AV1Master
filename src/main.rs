@@ -8,19 +8,18 @@ use rocket::Data;
 use rocket_contrib::json::Json;
 use serde_json::Value;
 use serde_json::json;
-use serde::{Serialize, Deserialize};
 use rocket_contrib::uuid::Uuid;
 use rocket_contrib::serve::StaticFiles;
 
 use std::sync::Mutex;
 use std::collections::HashMap;
-use std::net::SocketAddr;
+use std::path::Path;
 
 mod workunit;
 use workunit::WUnit;
 use workunit::EStatus;
 
-const VERSION: &str = "0.2.0";
+const VERSION: &str = "0.3.0";
 
 #[derive(Default, Debug)]
 struct SharedState {
@@ -106,9 +105,17 @@ fn edit_status(id: Uuid, status: String, shared: State<SharedState>, remote_addr
 
 
 
-#[post("/", data = "<video>")]
-fn upload(video: Data) -> Result<String, std::io::Error> {
-
+#[post("/upload/<id>", data = "<video>")]
+fn upload(id: Uuid, video: Data, shared: State<SharedState>) -> Result<String, std::io::Error> {
+    if shared.jobs.lock().unwrap().contains_key(&id) == false {
+        Err(std::io::Error::new(std::io::ErrorKind::NotFound, "Job not found"))
+    }
+    else {
+        let filename = format!("results/{name}.{id}.webm", name = shared.jobs.lock().unwrap().get(&id).unwrap().description.file_name, id = id);
+        let url = format!("{host}/{id}\n", host = "https://av1.dodsorf.as", id = id);
+        video.stream_to_file(Path::new(&filename))?;
+        Ok(url)
+    }
 }
 
 
@@ -126,6 +133,6 @@ fn main() {
         rocket::ignite()
         .manage(SharedState::default())
         .mount("/", StaticFiles::from("src/static")) // switch to templates or something cause this is dumb
-        .mount("/", routes![index, version, get_jobs, get_job, request_job, edit_status, add_job])
+        .mount("/", routes![index, version, get_jobs, get_job, request_job, edit_status, add_job, upload])
         .launch();
 }

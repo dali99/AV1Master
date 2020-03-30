@@ -1,5 +1,4 @@
 use serde::{Serialize, Deserialize};
-use serde_repr::*;
 use uuid::Uuid;
 
 use std::net::IpAddr;
