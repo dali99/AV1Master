@@ -45,6 +45,7 @@ while true; do
         echo "Is the Job Server Down?"
         continue
     fi
+    echo ""
     echo "Reserved!"
 
     source=`printf "%s\n" "$job" | jq -r .description.file_url`
