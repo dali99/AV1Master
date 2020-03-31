@@ -47,6 +47,7 @@ pub struct EOptions {
     pub ffmpeg: String,
     pub aomenc: String,
     pub two_pass: bool,
+    pub pix_fmt: EPixFmt
 }
 impl Default for EOptions {
     fn default() -> Self {
@@ -70,4 +71,11 @@ impl Default for EStatus {
     fn default() -> Self {
         EStatus::Queued
     }
+}
+
+pub enum EPixFmt {
+    YV12,
+    I420,
+    I422,
+    I444
 }
