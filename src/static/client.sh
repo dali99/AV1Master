@@ -109,6 +109,9 @@ while true; do
         fi
         set -e
 
+        echo "Deleting Source and Temporary files"
+        rm "$input" "$input".fpf
+
     else
         set +e
         eval 'ffmpeg -nostats -hide_banner -loglevel warning \
@@ -123,6 +126,9 @@ while true; do
             continue
         fi
         set -e
+
+        echo "Deleting Source"
+        rm "$input"
     fi
 
     set +e
