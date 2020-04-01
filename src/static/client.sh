@@ -80,12 +80,27 @@ while true; do
     ffmpego=`echo $job | jq -r .description.options.ffmpeg`
     ffmpego=${ffmpego//[^a-zA-Z0-9_\- =:]/}
 
+    pix_fmt=`echo $job | jq -r .description.options.pix_fmt`
+    if [[ $pix_fmt = "YV12" ]]; then
+        ffpix="yv12p"
+        aompix="--yv12"
+    elif [[ $pix_fmt = "I420" ]]; then
+        ffpix="yv420p"
+        aompix="--i420"
+    elif [[ $pix_fmt = I422 ]]; then
+        ffpix="yv422p"
+        aompix="--i422"
+    elif [[ $pix_fmt = I444 ]]; then
+        ffpix="yv444p"
+        aompix="--i444"
+    fi
+
     two_pass=`echo $job | jq -r .description.options.two_pass`
 
     if [[ $two_pass = true ]]; then
         set +e
         eval 'ffmpeg -nostats -hide_banner -loglevel warning \
-        -i "'$input'" '$ffmpego' -vf scale='$height':'$width' -pix_fmt yuv422p -f yuv4mpegpipe - | aomenc - --i422 '$aomenco' \
+        -i "'$input'" '$ffmpego' -vf scale='$height':'$width' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aompix' '$aomenco' \
         --pass=1 --passes=2 --fpf="'$input'.fpf" --webm -o "'$input'.out.webm"'
 
         retval=$?
@@ -97,7 +112,7 @@ while true; do
         fi
 
         eval 'ffmpeg -nostats -hide_banner -loglevel warning \
-        -i "'$input'" '$ffmpego' -vf scale='$height':'$width' -pix_fmt yuv422p -f yuv4mpegpipe - | aomenc - --i422 '$aomenco' \
+        -i "'$input'" '$ffmpego' -vf scale='$height':'$width' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aompix' '$aomenco' \
         --pass=2 --passes=2 --fpf="'$input'.fpf" --webm -o "'$input'.out.webm"'
 
         retval=$?
@@ -115,7 +130,7 @@ while true; do
     else
         set +e
         eval 'ffmpeg -nostats -hide_banner -loglevel warning \
-        -i "'$input'" '$ffmpego' -vf scale='$height':'$width' -pix_fmt yuv422p -f yuv4mpegpipe - | aomenc - --i422 '$aomenco' \
+        -i "'$input'" '$ffmpego' -vf scale='$height':'$width' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aompix' '$aomenco' \
         --passes=1 --fpf="'$input'.fpf" --webm -o "'$input'.out.webm"'
 
         retval=$?
