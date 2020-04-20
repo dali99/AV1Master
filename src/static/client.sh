@@ -10,7 +10,7 @@ version="0.4.0"
 while true; do
     sleep 30
     set +e
-    upsteam_version=`curl -s "$base_url"/version`
+    upstream_version=`curl -s "$base_url"/version`
     retval=$?
     set -e
     if [ $retval -ne 0 ]; then
