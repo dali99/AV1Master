@@ -1,23 +1,22 @@
-#! /usr/bin/env nix-shell
-#! nix-shell -i bash -p bash curl jq libaom ffmpeg-full
+#! /usr/bin/env bash
 
 set -euo pipefail
 IFS=$'\n\t'
 
 base_url="$1"
-version="0.4.0"
+version="0.5.0"
 
 while true; do
     sleep 30
     set +e
-    upsteam_version=`curl -s "$base_url"/version`
+    upstream_version=`curl -L -f -s "$base_url"/version`
     retval=$?
     set -e
     if [ $retval -ne 0 ]; then
         echo "Is the Job Server Down?"
         continue
     fi
-    if [[ $version != $upsteam_version ]]; then
+    if [[ $version != $upstream_version ]]; then
         echo "Wrong version: client version is $version, while job server requires $upstream_version"
         break
     fi
