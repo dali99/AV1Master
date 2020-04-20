@@ -30,7 +30,7 @@ struct SharedState {
 fn index() -> String {
 format!("Wecome to the AV1Master Server version {version}\n
 This currently requires a distro with CAP_SYS_USER_NS enabled and correct permissions
-curl -L {baseurl}/av1client > av1client && chmod +x ./av1client && ./av1client {baseurl}", version=VERSION, baseurl="https://av1.dodsorf.as")
+curl -L {baseurl}/av1client > av1client && chmod +x ./av1client && ./av1client", version=VERSION)
 }
 
 #[get("/version")]
