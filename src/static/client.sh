@@ -17,7 +17,7 @@ while true; do
         echo "Is the Job Server Down?"
         continue
     fi
-    if [[ $version != $upsteam_version ]]; then
+    if [[ $version != $upstream_version ]]; then
         echo "Wrong version: client version is $version, while job server requires $upstream_version"
         break
     fi
