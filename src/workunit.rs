@@ -54,7 +54,8 @@ impl Default for EOptions {
         EOptions{
             ffmpeg: String::default(),
             aomenc: "--lag-in-frames=25 --tile-columns=0 --tile-rows=0 --enable-fwd-kf=1 --bit-depth=10 --cpu-used=3 --cq-level=30 --end-usage=q".to_string(),
-            two_pass: false
+            two_pass: false,
+            pix_fmt: EPixFmt::I422
         }
     }
 }
@@ -73,6 +74,7 @@ impl Default for EStatus {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum EPixFmt {
     YV12,
     I420,
