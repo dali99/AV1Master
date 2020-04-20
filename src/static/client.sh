@@ -83,16 +83,16 @@ while true; do
 
     pix_fmt=`echo $job | jq -r .description.options.pix_fmt`
     if [[ $pix_fmt = "YV12" ]]; then
-        ffpix="yv12p"
+        ffpix="yuv12p"
         aompix="--yv12"
     elif [[ $pix_fmt = "I420" ]]; then
-        ffpix="yv420p"
+        ffpix="yuv420p"
         aompix="--i420"
     elif [[ $pix_fmt = I422 ]]; then
-        ffpix="yv422p"
+        ffpix="yuv422p"
         aompix="--i422"
     elif [[ $pix_fmt = I444 ]]; then
-        ffpix="yv444p"
+        ffpix="yuv444p"
         aompix="--i444"
     fi
 
