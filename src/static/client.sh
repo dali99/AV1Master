@@ -3,7 +3,7 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-base_url="$1"
+base_url="https://av1.dodsorf.as"
 version="0.5.0"
 
 while true; do
