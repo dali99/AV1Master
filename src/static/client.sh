@@ -13,6 +13,8 @@ while true; do
     retval=$?
     set -e
     if [ $retval -ne 0 ]; then
+        echo "Error: $retval"
+        echo ""
         echo "Is the Job Server Down?"
         continue
     fi
