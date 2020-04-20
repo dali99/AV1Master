@@ -1,5 +1,4 @@
-#! /usr/bin/env nix-shell
-#! nix-shell -i bash -p bash curl jq libaom ffmpeg-full
+#! /usr/bin/env bash
 
 set -euo pipefail
 IFS=$'\n\t'
@@ -10,7 +9,7 @@ version="0.5.0"
 while true; do
     sleep 30
     set +e
-    upstream_version=`curl -s "$base_url"/version`
+    upstream_version=`curl -L -f -s "$base_url"/version`
     retval=$?
     set -e
     if [ $retval -ne 0 ]; then

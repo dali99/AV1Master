@@ -29,8 +29,8 @@ struct SharedState {
 #[get("/")]
 fn index() -> String {
 format!("Wecome to the AV1Master Server version {version}\n
-This currently requires a working <a href=\"https://nixos.org/nix/\">nix</a> installion\n
-curl -L {baseurl}/client.sh > client.sh && chmod +x ./client.sh && ./client.sh {baseurl}", version=VERSION, baseurl="https://av1.dodsorf.as")
+This currently requires a distro with CAP_SYS_USER_NS enabled and correct permissions
+curl -L {baseurl}/client.sh > client.sh && chmod +x ./av1client && ./av1client {baseurl}", version=VERSION, baseurl="https://av1.dodsorf.as")
 }
 
 #[get("/version")]
