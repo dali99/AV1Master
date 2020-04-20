@@ -19,7 +19,8 @@ curl "$base_url"/add_job -X POST -H "Content-Type: application/json" -d \
         "options": {
             "aomenc": "--lag-in-frames=25 --tile-columns=0 --tile-rows=0 --enable-fwd-kf=1 --bit-depth=10 --cpu-used=0 --end-usage=vbr --target-bitrate=60 --kf-min-dist=9999 --kf-max-dist=9999",
             "ffmpeg": "",
-            "two_pass": true
+            "two_pass": true,
+            "pix_fmt": "YV12"
         }
     }
 '
