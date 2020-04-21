@@ -132,10 +132,10 @@ while true; do
 
         echo 'ffmpeg -nostats -hide_banner -loglevel warning \
         -i "'$input'" '$ffmpego' -vf scale='$width':'$height','$fffps' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aomfps' '$aompix' '$aomenco' \
-        --pass=2 --passes=2 --fpf="'$input'.fpf" --webm -o "'$input'.out.mkv"'
+        --pass=2 --passes=2 --fpf="'$input'.fpf" -o "'$input'.out.mkv"'
         eval 'ffmpeg -nostats -hide_banner -loglevel warning \
         -i "'$input'" '$ffmpego' -vf scale='$width':'$height','$fffps' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aomfps' '$aompix' '$aomenco' \
-        --pass=2 --passes=2 --fpf="'$input'.fpf" --webm -o "'$input'.out.mkv"'
+        --pass=2 --passes=2 --fpf="'$input'.fpf" -o "'$input'.out.mkv"'
 
         retval=$?
         if [ $retval -ne 0 ]; then
@@ -176,7 +176,7 @@ while true; do
     echo "Uploading file!"
 
     set +e
-    curl --data-binary @"$input".out.webm "$base_url"/upload/"$job_id"
+    curl --data-binary @"$input".out.mkv "$base_url"/upload/"$job_id"
     set -e
     retval=$?
     echo ""
@@ -185,7 +185,7 @@ while true; do
         continue
     else
         echo "Upload finished, deleting result!"
-        rm "$input".out.webm
+        rm "$input".out.mkv
         echo ""
     fi
 done
