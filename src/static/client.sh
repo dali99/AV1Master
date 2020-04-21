@@ -174,5 +174,6 @@ while true; do
     else
         echo "Upload finished, deleting result!"
         rm "$input".out.webm
+        echo ""
     fi
 done
