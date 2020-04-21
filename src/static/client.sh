@@ -106,7 +106,7 @@ while true; do
         fpsrate=`echo $fps | jq -r '.[0]'`
         fpsscale=`echo $fps | jq -r '.[1]'`
         fpsv="$fpsrate/$fpsscale"
-        fffps="fps=fps=$fpsv"
+        fffps="fps=fps=$fpsv -r $fpsv"
         aomfps="--fps=$fpsv"
     fi
 
