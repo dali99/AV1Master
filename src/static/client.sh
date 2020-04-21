@@ -96,21 +96,27 @@ while true; do
         aompix="--i444"
     fi
 
+
+
     fps=`echo $job | jq -r .description.options.fps`
     if [[ $fps = "null" ]]; then
-        fpsoption=""
+        fffps=""
+        aomfps=""
     else
         fpsrate=`echo $fps | jq -r '.[0]'`
         fpsscale=`echo $fps | jq -r '.[1]'`
-        fpsoption="$fpsrate/$fpsscale"
+        fpsv="$fpsrate/$fpsscale"
+        fffps="fps=fps=$fpsv"
+        aomfps="--fps=$fpsv"
     fi
+
 
     two_pass=`echo $job | jq -r .description.options.two_pass`
 
     if [[ $two_pass = true ]]; then
         set +e
         eval 'ffmpeg -nostats -hide_banner -loglevel warning \
-        -i "'$input'" '$ffmpego' -vf scale='$height':'$width' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$fpsoption' '$aompix' '$aomenco' \
+        -i "'$input'" '$ffmpego' -vf scale='$height':'$width','$fffps' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aomfps' '$aompix' '$aomenco' \
         --pass=1 --passes=2 --fpf="'$input'.fpf" --webm -o "'$input'.out.webm"'
 
         retval=$?
@@ -122,7 +128,7 @@ while true; do
         fi
 
         eval 'ffmpeg -nostats -hide_banner -loglevel warning \
-        -i "'$input'" '$ffmpego' -vf scale='$height':'$width' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$fpsoption' '$aompix' '$aomenco' \
+        -i "'$input'" '$ffmpego' -vf scale='$height':'$width','$fffps' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aomfps' '$aompix' '$aomenco' \
         --pass=2 --passes=2 --fpf="'$input'.fpf" --webm -o "'$input'.out.webm"'
 
         retval=$?
@@ -140,7 +146,7 @@ while true; do
     else
         set +e
         eval 'ffmpeg -nostats -hide_banner -loglevel warning \
-        -i "'$input'" '$ffmpego' -vf scale='$height':'$width' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$fpsoption' '$aompix' '$aomenco' \
+        -i "'$input'" '$ffmpego' -vf scale='$height':'$width','$fffps' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aomfps' '$aompix' '$aomenco' \
         --passes=1 --fpf="'$input'.fpf" --webm -o "'$input'.out.webm"'
 
         retval=$?

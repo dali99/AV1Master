@@ -48,8 +48,7 @@ pub struct EOptions {
     pub aomenc: String,
     pub two_pass: bool,
     pub pix_fmt: EPixFmt,
-    #[serde(default)]
-    pub fps: Option<(u16, u16)>
+    pub fps: (u16, u16)
 }
 impl Default for EOptions {
     fn default() -> Self {
@@ -58,7 +57,7 @@ impl Default for EOptions {
             aomenc: "--lag-in-frames=25 --tile-columns=0 --tile-rows=0 --enable-fwd-kf=1 --bit-depth=10 --cpu-used=3 --cq-level=30 --end-usage=q".to_string(),
             two_pass: false,
             pix_fmt: EPixFmt::I422,
-            fps: Option::None
+            fps: (25, 1)
         }
     }
 }
