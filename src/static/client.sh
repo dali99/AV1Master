@@ -4,7 +4,7 @@ set -euo pipefail
 IFS=$'\n\t'
 
 base_url="https://av1.dodsorf.as"
-version="0.6.0"
+version="0.7.0"
 
 while true; do
     sleep 30
