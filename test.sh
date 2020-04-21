@@ -14,7 +14,7 @@ curl "$base_url"/add_job -X POST -H "Content-Type: application/json" -d \
         "file_url": "https://pomf.dodsorf.as/f/vz9dtl.mkv",
         "file_name": "014",
         "priority": 0,
-        "length": 15,
+        "length": 20,
         "resolution": [540, 960],
         "options": {
             "aomenc": "--lag-in-frames=25 --tile-columns=0 --tile-rows=0 --enable-fwd-kf=1 --bit-depth=10 --cpu-used=0 --end-usage=vbr --target-bitrate=60 --kf-min-dist=9999 --kf-max-dist=9999",

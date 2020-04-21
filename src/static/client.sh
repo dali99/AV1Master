@@ -4,7 +4,7 @@ set -euo pipefail
 IFS=$'\n\t'
 
 base_url="https://av1.dodsorf.as"
-version="0.5.0"
+version="0.6.0"
 
 while true; do
     sleep 30
@@ -88,12 +88,21 @@ while true; do
     elif [[ $pix_fmt = "I420" ]]; then
         ffpix="yuv420p"
         aompix="--i420"
-    elif [[ $pix_fmt = I422 ]]; then
+    elif [[ $pix_fmt = "I422" ]]; then
         ffpix="yuv422p"
         aompix="--i422"
-    elif [[ $pix_fmt = I444 ]]; then
+    elif [[ $pix_fmt = "I444" ]]; then
         ffpix="yuv444p"
         aompix="--i444"
+    fi
+
+    fps=`echo $job | jq -r .description.options.fps`
+    if [[ $fps = "null" ]]; then
+        fpsoption=""
+    else
+        fpsrate=`echo $fps | jq -r '.[0]'`
+        fpsscale=`echo $fps | jq -r '.[1]'`
+        fpsoption="$fpsrate/$fpsscale"
     fi
 
     two_pass=`echo $job | jq -r .description.options.two_pass`
@@ -101,7 +110,7 @@ while true; do
     if [[ $two_pass = true ]]; then
         set +e
         eval 'ffmpeg -nostats -hide_banner -loglevel warning \
-        -i "'$input'" '$ffmpego' -vf scale='$height':'$width' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aompix' '$aomenco' \
+        -i "'$input'" '$ffmpego' -vf scale='$height':'$width' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$fpsoption' '$aompix' '$aomenco' \
         --pass=1 --passes=2 --fpf="'$input'.fpf" --webm -o "'$input'.out.webm"'
 
         retval=$?
@@ -113,7 +122,7 @@ while true; do
         fi
 
         eval 'ffmpeg -nostats -hide_banner -loglevel warning \
-        -i "'$input'" '$ffmpego' -vf scale='$height':'$width' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aompix' '$aomenco' \
+        -i "'$input'" '$ffmpego' -vf scale='$height':'$width' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$fpsoption' '$aompix' '$aomenco' \
         --pass=2 --passes=2 --fpf="'$input'.fpf" --webm -o "'$input'.out.webm"'
 
         retval=$?
@@ -131,7 +140,7 @@ while true; do
     else
         set +e
         eval 'ffmpeg -nostats -hide_banner -loglevel warning \
-        -i "'$input'" '$ffmpego' -vf scale='$height':'$width' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aompix' '$aomenco' \
+        -i "'$input'" '$ffmpego' -vf scale='$height':'$width' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$fpsoption' '$aompix' '$aomenco' \
         --passes=1 --fpf="'$input'.fpf" --webm -o "'$input'.out.webm"'
 
         retval=$?
@@ -166,6 +175,4 @@ while true; do
         echo "Upload finished, deleting result!"
         rm "$input".out.webm
     fi
-
-
 done
