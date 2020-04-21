@@ -117,10 +117,10 @@ while true; do
         set +e
         echo 'ffmpeg -nostats -hide_banner -loglevel warning \
         -i "'$input'" '$ffmpego' -vf scale='$width':'$height','$fffps' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aomfps' '$aompix' '$aomenco' \
-        --pass=1 --passes=2 --fpf="'$input'.fpf" --webm -o "'$input'.out.webm"'
+        --pass=1 --passes=2 --fpf="'$input'.fpf" -o "'$input'.out.mkv"'
         eval 'ffmpeg -nostats -hide_banner -loglevel warning \
         -i "'$input'" '$ffmpego' -vf scale='$width':'$height','$fffps' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aomfps' '$aompix' '$aomenco' \
-        --pass=1 --passes=2 --fpf="'$input'.fpf" --webm -o "'$input'.out.webm"'
+        --pass=1 --passes=2 --fpf="'$input'.fpf" -o "'$input'.out.mkv"'
 
         retval=$?
         if [ $retval -ne 0 ]; then
@@ -132,10 +132,10 @@ while true; do
 
         echo 'ffmpeg -nostats -hide_banner -loglevel warning \
         -i "'$input'" '$ffmpego' -vf scale='$width':'$height','$fffps' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aomfps' '$aompix' '$aomenco' \
-        --pass=2 --passes=2 --fpf="'$input'.fpf" --webm -o "'$input'.out.webm"'
+        --pass=2 --passes=2 --fpf="'$input'.fpf" --webm -o "'$input'.out.mkv"'
         eval 'ffmpeg -nostats -hide_banner -loglevel warning \
         -i "'$input'" '$ffmpego' -vf scale='$width':'$height','$fffps' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aomfps' '$aompix' '$aomenco' \
-        --pass=2 --passes=2 --fpf="'$input'.fpf" --webm -o "'$input'.out.webm"'
+        --pass=2 --passes=2 --fpf="'$input'.fpf" --webm -o "'$input'.out.mkv"'
 
         retval=$?
         if [ $retval -ne 0 ]; then
@@ -153,7 +153,7 @@ while true; do
         set +e
         eval 'ffmpeg -nostats -hide_banner -loglevel warning \
         -i "'$input'" '$ffmpego' -vf scale='$width':'$height','$fffps' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aomfps' '$aompix' '$aomenco' \
-        --passes=1 --fpf="'$input'.fpf" --webm -o "'$input'.out.webm"'
+        --passes=1 --fpf="'$input'.fpf"-o "'$input'.out.mkv"'
 
         retval=$?
         if [ $retval -ne 0 ]; then
