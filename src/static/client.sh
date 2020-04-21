@@ -115,6 +115,9 @@ while true; do
 
     if [[ $two_pass = true ]]; then
         set +e
+        echo 'ffmpeg -nostats -hide_banner -loglevel warning \
+        -i "'$input'" '$ffmpego' -vf scale='$height':'$width','$fffps' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aomfps' '$aompix' '$aomenco' \
+        --pass=1 --passes=2 --fpf="'$input'.fpf" --webm -o "'$input'.out.webm"'
         eval 'ffmpeg -nostats -hide_banner -loglevel warning \
         -i "'$input'" '$ffmpego' -vf scale='$height':'$width','$fffps' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aomfps' '$aompix' '$aomenco' \
         --pass=1 --passes=2 --fpf="'$input'.fpf" --webm -o "'$input'.out.webm"'
@@ -127,6 +130,9 @@ while true; do
             continue
         fi
 
+        echo 'ffmpeg -nostats -hide_banner -loglevel warning \
+        -i "'$input'" '$ffmpego' -vf scale='$height':'$width','$fffps' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aomfps' '$aompix' '$aomenco' \
+        --pass=2 --passes=2 --fpf="'$input'.fpf" --webm -o "'$input'.out.webm"'
         eval 'ffmpeg -nostats -hide_banner -loglevel warning \
         -i "'$input'" '$ffmpego' -vf scale='$height':'$width','$fffps' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aomfps' '$aompix' '$aomenco' \
         --pass=2 --passes=2 --fpf="'$input'.fpf" --webm -o "'$input'.out.webm"'
