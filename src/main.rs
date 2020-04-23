@@ -51,7 +51,7 @@ fn request_job(shared: State<SharedState>) -> Result<Json<Value>, NotFound<Strin
         .filter(|x| x.status == EStatus::Queued).cloned()
         .collect();
 
-    list.sort_by(|a, b| b.description.length.cmp(&a.description.length));
+    list.sort_by(|a, b| (b.description.priority, b.description.length).cmp(&(a.description.priority, a.description.length)));
 
     let job = list.get(0);
 
