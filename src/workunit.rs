@@ -6,13 +6,21 @@ use std::net::IpAddr;
 #[derive(Default, Debug, Serialize, Deserialize, Clone)]
 pub struct WUnit {
     pub id: Uuid,
+    pub jobset: String,
     pub description: WDesc,
     pub status: EStatus
 }
 impl WUnit {
-    pub fn new(id: Uuid, description: WDesc) -> Self {
+    pub fn new(id: Uuid, _jobset: String, description: WDesc) -> Self {
+        let jobset: String = _jobset.chars()
+            .map(|x| match x {
+                '.' => '_',
+                '/' => '-',
+                _ => x
+            }).collect();
         WUnit {
             id: id,
+            jobset: jobset,
             description: description,
             status: EStatus::Queued
         }

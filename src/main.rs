@@ -108,7 +108,9 @@ fn upload(id: Uuid, video: Data, shared: State<SharedState>) -> Result<String, s
         Err(std::io::Error::new(std::io::ErrorKind::NotFound, "Job not found"))
     }
     else {
-        let filename = format!("results/{name}.{id}.webm", name = shared.jobs.lock().unwrap().get(&id).unwrap().description.file_name, id = id);
+        let list = shared.jobs.lock().unwrap();
+        let job = list.get(&id).unwrap();
+        let filename = format!("results/{jobset}/{name}.{id}.webm", jobset = job.jobset, name = job.description.file_name, id = id);
         let url = format!("{host}/{id}\n", host = "https://av1.dodsorf.as", id = id);
         video.stream_to_file(Path::new(&filename))?;
         Ok(url)
@@ -116,11 +118,11 @@ fn upload(id: Uuid, video: Data, shared: State<SharedState>) -> Result<String, s
 }
 
 
-#[post("/add_job", format = "json", data = "<message>")]
-fn add_job(message: Json<workunit::WDesc>, shared: State<SharedState>) {
+#[post("/add_job/<jobset>", format = "json", data = "<message>")]
+fn add_job(message: Json<workunit::WDesc>, jobset: String, shared: State<SharedState>) {
     let job = message.into_inner();
     let id = uuid::Uuid::new_v4();
-    shared.jobs.lock().unwrap().insert(id, WUnit::new(id, job));
+    shared.jobs.lock().unwrap().insert(id, WUnit::new(id, jobset, job));
 }
 
 fn main() {
