@@ -4,7 +4,7 @@ set -euo pipefail
 IFS=$'\n\t'
 
 base_url="https://av1.dodsorf.as"
-version="0.8.0"
+version="0.9.0"
 
 while true; do
     sleep 30
@@ -117,10 +117,7 @@ while true; do
         set +e
         echo 'ffmpeg -nostats -hide_banner -loglevel warning \
         -i "'$input'" '$ffmpego' -vf scale='$width':'$height','$fffps' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aomfps' '$aompix' '$aomenco' \
-        --pass=1 --passes=2 --fpf="'$input'.fpf" --webm -o "'$input'.out.webm"'
-        eval 'ffmpeg -nostats -hide_banner -loglevel warning \
-        -i "'$input'" '$ffmpego' -vf scale='$width':'$height','$fffps' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aomfps' '$aompix' '$aomenco' \
-        --pass=1 --passes=2 --fpf="'$input'.fpf" --webm -o "'$input'.out.webm"'
+        --pass=1 --passes=2 --fpf="'$input'.fpf" -o "'$input'.out.ivf"'
 
         retval=$?
         if [ $retval -ne 0 ]; then
@@ -132,10 +129,7 @@ while true; do
 
         echo 'ffmpeg -nostats -hide_banner -loglevel warning \
         -i "'$input'" '$ffmpego' -vf scale='$width':'$height','$fffps' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aomfps' '$aompix' '$aomenco' \
-        --pass=2 --passes=2 --fpf="'$input'.fpf" --webm -o "'$input'.out.webm"'
-        eval 'ffmpeg -nostats -hide_banner -loglevel warning \
-        -i "'$input'" '$ffmpego' -vf scale='$width':'$height','$fffps' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aomfps' '$aompix' '$aomenco' \
-        --pass=2 --passes=2 --fpf="'$input'.fpf" --webm -o "'$input'.out.webm"'
+        --pass=2 --passes=2 --fpf="'$input'.fpf" -o "'$input'.out.ivf"'
 
         retval=$?
         if [ $retval -ne 0 ]; then
@@ -153,7 +147,7 @@ while true; do
         set +e
         eval 'ffmpeg -nostats -hide_banner -loglevel warning \
         -i "'$input'" '$ffmpego' -vf scale='$width':'$height','$fffps' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aomfps' '$aompix' '$aomenco' \
-        --passes=1 --fpf="'$input'.fpf" --webm -o "'$input'.out.webm"'
+        --passes=1 --fpf="'$input'.fpf" -o "'$input'.out.ivf"'
 
         retval=$?
         if [ $retval -ne 0 ]; then
@@ -176,7 +170,7 @@ while true; do
     echo "Uploading file!"
 
     set +e
-    curl --data-binary @"$input".out.webm "$base_url"/upload/"$job_id"
+    curl --data-binary @"$input".out.ivf "$base_url"/upload/"$job_id"
     set -e
     retval=$?
     echo ""
@@ -185,7 +179,7 @@ while true; do
         continue
     else
         echo "Upload finished, deleting result!"
-        rm "$input".out.webm
+        rm "$input".out.ivf
         echo ""
     fi
 done
