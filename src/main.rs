@@ -110,8 +110,12 @@ fn upload(id: Uuid, video: Data, shared: State<SharedState>) -> Result<String, s
     else {
         let list = shared.jobs.lock().unwrap();
         let job = list.get(&id).unwrap();
-        let filename = format!("results/{jobset}/{name}.webm", jobset = job.jobset, name = job.description.file_name);
+
+	let folder = format!("results/{jobset}", jobset = job.jobset);
+        let filename = format!("{folder}/{name}.{id}.webm", folder = folder, name = job.description.file_name, id = id);
+
         let url = format!("{host}/{id}\n", host = "https://av1.dodsorf.as", id = id);
+	std::fs::create_dir_all(&folder)?;
         video.stream_to_file(Path::new(&filename))?;
         Ok(url)
     }
