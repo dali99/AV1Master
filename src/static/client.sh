@@ -115,7 +115,7 @@ while true; do
 
     if [[ $two_pass = true ]]; then
         set +e
-        echo 'ffmpeg -nostats -hide_banner -loglevel warning \
+        eval 'ffmpeg -nostats -hide_banner -loglevel warning \
         -i "'$input'" '$ffmpego' -vf scale='$width':'$height','$fffps' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aomfps' '$aompix' '$aomenco' \
         --pass=1 --passes=2 --fpf="'$input'.fpf" -o "'$input'.out.ivf"'
 
@@ -127,7 +127,7 @@ while true; do
             continue
         fi
 
-        echo 'ffmpeg -nostats -hide_banner -loglevel warning \
+        eval 'ffmpeg -nostats -hide_banner -loglevel warning \
         -i "'$input'" '$ffmpego' -vf scale='$width':'$height','$fffps' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aomfps' '$aompix' '$aomenco' \
         --pass=2 --passes=2 --fpf="'$input'.fpf" -o "'$input'.out.ivf"'
 
