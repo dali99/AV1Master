@@ -110,7 +110,7 @@ fn upload(id: Uuid, video: Data, shared: State<SharedState>) -> Result<String, s
     else {
         let list = shared.jobs.lock().unwrap();
         let job = list.get(&id).unwrap();
-        let filename = format!("results/{jobset}/{name}.{id}.webm", jobset = job.jobset, name = job.description.file_name, id = id);
+        let filename = format!("results/{jobset}/{name}.webm", jobset = job.jobset, name = job.description.file_name);
         let url = format!("{host}/{id}\n", host = "https://av1.dodsorf.as", id = id);
         video.stream_to_file(Path::new(&filename))?;
         Ok(url)
