@@ -4,7 +4,7 @@ set -euo pipefail
 IFS=$'\n\t'
 
 base_url="https://av1.dodsorf.as"
-version="0.9.0"
+version="0.10.0"
 
 while true; do
     sleep 30
@@ -117,7 +117,7 @@ while true; do
         set +e
         eval 'ffmpeg -nostats -hide_banner -loglevel warning \
         -i "'$input'" '$ffmpego' -vf scale='$width':'$height','$fffps' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aomfps' '$aompix' '$aomenco' \
-        --pass=1 --passes=2 --fpf="'$input'.fpf" -o "'$input'.out.ivf"'
+        --pass=1 --passes=2 --fpf="'$input'.fpf" --ivf -o "'$input'.out.ivf"'
 
         retval=$?
         if [ $retval -ne 0 ]; then
@@ -129,7 +129,7 @@ while true; do
 
         eval 'ffmpeg -nostats -hide_banner -loglevel warning \
         -i "'$input'" '$ffmpego' -vf scale='$width':'$height','$fffps' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aomfps' '$aompix' '$aomenco' \
-        --pass=2 --passes=2 --fpf="'$input'.fpf" -o "'$input'.out.ivf"'
+        --pass=2 --passes=2 --fpf="'$input'.fpf" --ivf -o "'$input'.out.ivf"'
 
         retval=$?
         if [ $retval -ne 0 ]; then
@@ -147,7 +147,7 @@ while true; do
         set +e
         eval 'ffmpeg -nostats -hide_banner -loglevel warning \
         -i "'$input'" '$ffmpego' -vf scale='$width':'$height','$fffps' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aomfps' '$aompix' '$aomenco' \
-        --passes=1 --fpf="'$input'.fpf" -o "'$input'.out.ivf"'
+        --passes=1 --fpf="'$input'.fpf" --ivf -o "'$input'.out.ivf"'
 
         retval=$?
         if [ $retval -ne 0 ]; then
