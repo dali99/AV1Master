@@ -8,10 +8,10 @@ curl "$base_url"
 
 curl "$base_url"/get_jobs | jq
 
-curl "$base_url"/add_job/b -X POST -H "Content-Type: application/json" -d \
+curl "$base_url"/add_job/a -X POST -H "Content-Type: application/json" -d \
 '
     {
-        "file_url": "https://pomf.dodsorf.as/f/vz9dtl.mkv",
+        "file_url": "https://pomf.dodsorf.as/f/g91y5j.mkv",
         "file_name": "014",
         "priority": 15,
         "length": 90,
@@ -21,6 +21,9 @@ curl "$base_url"/add_job/b -X POST -H "Content-Type: application/json" -d \
                 "two_pass": true,
                 "crf": 45,
                 "b_v": "0",
+                "lag_in_frames": 35,
+                "gop": null,
+                "pix_fmt": "yuv420p10le",
                 "tiles": "1x1",
                 "speed": 4
             }

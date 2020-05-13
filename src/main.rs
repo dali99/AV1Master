@@ -142,5 +142,5 @@ fn main() {
 #[get("/test_job/<jobset>")]
 fn test_job(jobset: String, shared: State<SharedState>) {
     let id = uuid::Uuid::new_v4();
-    shared.jobs.lock().unwrap().insert(id, WUnit::new(id, jobset, workunit::WDesc::new("https://pomf.dodsorf.as/f/vz9dtl.mkv", "014", None, 90, (540, 960), None)));
+    shared.jobs.lock().unwrap().insert(id, WUnit::new(id, jobset, workunit::WDesc::new("https://pomf.dodsorf.as/f/g91y5j.mkv", "014", None, 90, (540, 960), None)));
 }

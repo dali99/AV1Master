@@ -87,6 +87,7 @@ pub struct FffmpegO {
     pub crf: u8,
     pub b_v: String,
     pub lag_in_frames: u8,
+    pub gop: Option<u16>,
     pub pix_fmt: String,
     pub tiles: String,
     pub speed: u8
@@ -98,7 +99,8 @@ impl Default for FffmpegO {
             crf: 30,
             b_v: "0".to_string(),
             lag_in_frames: 35,
-            pix_fmt: "yuv420p10le"
+            gop: Option::None,
+            pix_fmt: "yuv420p10le".to_string(),
             tiles: "1x1".to_string(),
             speed: 4
         }
