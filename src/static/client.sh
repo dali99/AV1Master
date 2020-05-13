@@ -173,22 +173,67 @@ while true; do
             ;;
         "FFMPEG")
                 echo "Starting FFMPEG encode"
+
+                two_pass=`echo $options | jq -r .two_pass`
+
                 if [[ $two_pass = true ]]; then
                     echo "Running in two-pass mode"
-                    
-                    options=`echo $job | jq -r .options.$etype`
 
                     pix_fmt=`echo $options | jq -r .pix_fmt`
+
+                    crf=`echo $options | jq -r .crf`
+                    b_v=`echo $options | jq -r .b_v`
+
                     tiles=`echo $options | jq -r .tiles`
                     lag_in_frames=`echo $options | jq -r .lag_in_frames`
 
+                    gop=`echo $options | jq -r .gop`
+                    if [[ $gop != "null" ]]; then
+                        flag_g="-g $gop"
+                    else
+                        flag_g=""
+                    fi
+
+                    speed=`echo $options | jq -r .speed`
+
                     set +e
-                    ffmpeg -i $input -c:v libaom-av1 -strict experimental -pass 1 -an \
+                    ffmpeg -y -i $input -c:v libaom-av1 -strict experimental -pass 1 -an \
                         -vf scale=$width:$height -pix_fmt $pix_fmt \
+                        -crf $crf -b:v $b_v \
                         -tiles $tiles -lag-in-frames $lag_in_frames $flag_g \
-                        -f ivf /dev/null
+                        -cpu-used $speed -f ivf /dev/null
+                    retval=$?
+                    if [ $retval -ne 0 ]; then
+                        echo "Error running encode pass 1"
+                        curl -s -L "$base_url"/edit_status/"$job_id"/error || true
+                        echo ""
+                        continue
+                    fi
+
+                    ffmpeg -y -i $input -c:v libaom-av1 -strict experimental -pass 2 -an \
+                        -vf scale=$width:$height -pix_fmt $pix_fmt \
+                        -crf $crf -b:v $b_v \
+                        -tiles $tiles -lag-in-frames $lag_in_frames $flag_g \
+                        -cpu-used $speed -f ivf $input.out.ivf
+                    retval=$?
+                    if [ $retval -ne 0 ]; then
+                        echo "Error running encode pass 2"
+                        curl -s -L "$base_url"/edit_status/"$job_id"/error || true
+                        echo ""
+                        continue
+                    fi
+
+
+                    set -e
+
+                    echo "Deleting Source and Temporary files"
+                    rm "$input" "ffmpeg2pass-0.log"
+                else
+                    echo "one-pass mode is not supported!"
+                    continue
                 fi
             ;;
+        esac
 
     set +e
     curl -s -L "$base_url"/edit_status/"$job_id"/completed
