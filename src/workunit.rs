@@ -49,23 +49,58 @@ impl WDesc {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum EOptions {
+    AOMENC(AomencO),
+    FFMPEG(FffmpegO)
+}
+impl Default for EOptions {
+    fn default() -> Self {
+        let default = AomencO::default();
+        EOptions::AOMENC(default)
+    }
+}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct EOptions {
+pub struct AomencO {
     pub ffmpeg: String,
     pub aomenc: String,
     pub two_pass: bool,
     pub pix_fmt: EPixFmt,
     pub fps: (u16, u16)
 }
-impl Default for EOptions {
+impl Default for AomencO {
     fn default() -> Self {
-        EOptions{
+        AomencO{
             ffmpeg: String::default(),
-            aomenc: "--lag-in-frames=25 --tile-columns=0 --tile-rows=0 --enable-fwd-kf=1 --bit-depth=10 --cpu-used=3 --cq-level=30 --end-usage=q".to_string(),
-            two_pass: false,
+            aomenc: "--lag-in-frames=35 --tile-columns=0 --tile-rows=0 --enable-fwd-kf=1 --bit-depth=10 --cpu-used=4 --cq-level=30 --end-usage=q".to_string(),
+            two_pass: true,
             pix_fmt: EPixFmt::I422,
             fps: (25, 1)
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct FffmpegO {
+    pub two_pass: bool,
+    pub crf: u8,
+    pub b_v: String,
+    pub lag_in_frames: u8,
+    pub pix_fmt: String,
+    pub tiles: String,
+    pub speed: u8
+}
+impl Default for FffmpegO {
+    fn default() -> Self {
+        FffmpegO {
+            two_pass: true,
+            crf: 30,
+            b_v: "0".to_string(),
+            lag_in_frames: 35,
+            pix_fmt: "yuv420p10le"
+            tiles: "1x1".to_string(),
+            speed: 4
         }
     }
 }

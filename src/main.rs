@@ -19,7 +19,7 @@ mod workunit;
 use workunit::WUnit;
 use workunit::EStatus;
 
-const VERSION: &str = "0.10.0";
+const VERSION: &str = "0.11.0";
 
 #[derive(Default, Debug)]
 struct SharedState {
@@ -30,7 +30,7 @@ struct SharedState {
 fn index() -> String {
 format!("Wecome to the AV1Master Server version {version}\n
 This currently requires a distro with CAP_SYS_USER_NS enabled and correct permissions
-curl -L {baseurl}/av1client > av1client && chmod +x ./av1client && ./av1client", baseurl="https://av1.dodsorf.as", version=VERSION)
+curl -L {baseurl}/av1client > av1client && chmod +x ./av1client && ./av1client {baseurl}", baseurl="https://av1.dodsorf.as", version=VERSION)
 }
 
 #[get("/version")]
@@ -134,5 +134,13 @@ fn main() {
         .manage(SharedState::default())
         .mount("/", StaticFiles::from("src/static")) // switch to templates or something cause this is dumb
         .mount("/", routes![index, version, get_jobs, get_job, request_job, edit_status, add_job, upload])
+        .mount("/", routes![test_job])
         .launch();
+}
+
+
+#[get("/test_job/<jobset>")]
+fn test_job(jobset: String, shared: State<SharedState>) {
+    let id = uuid::Uuid::new_v4();
+    shared.jobs.lock().unwrap().insert(id, WUnit::new(id, jobset, workunit::WDesc::new("https://pomf.dodsorf.as/f/vz9dtl.mkv", "014", None, 90, (540, 960), None)));
 }

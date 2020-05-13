@@ -3,8 +3,8 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-base_url="https://av1.dodsorf.as"
-version="0.10.0"
+base_url="$1"
+version="0.11.0"
 
 while true; do
     sleep 30
@@ -71,96 +71,121 @@ while true; do
 
     echo "Starting Encode"
 
+    etype=`echo $job | jq -r '.description.options | keys | .[]'`
+
+    if [$etype != "FFMPEG"] || [$etype != "AOMENC" ]; then
+        echo "That's not a valid encoder!! Are you being attacked?"
+    fi
+
     height=`echo $job | jq -r .description.resolution[0]`
     width=`echo $job | jq -r .description.resolution[1]`
 
     echo $job | jq
 
-    aomenco=`echo $job | jq -r .description.options.aomenc`
-    aomenco=${aomenco//[^a-zA-Z0-9_\- =]/}
-    ffmpego=`echo $job | jq -r .description.options.ffmpeg`
-    ffmpego=${ffmpego//[^a-zA-Z0-9_\- =:]/}
+    options=`echo $job | jq .description.options.$etype`
 
-    pix_fmt=`echo $job | jq -r .description.options.pix_fmt`
-    if [[ $pix_fmt = "YV12" ]]; then
-        ffpix="yuv12p"
-        aompix="--yv12"
-    elif [[ $pix_fmt = "I420" ]]; then
-        ffpix="yuv420p"
-        aompix="--i420"
-    elif [[ $pix_fmt = "I422" ]]; then
-        ffpix="yuv422p"
-        aompix="--i422"
-    elif [[ $pix_fmt = "I444" ]]; then
-        ffpix="yuv444p"
-        aompix="--i444"
-    fi
+    case $etype in
+        AOMENC)
+            aomenco=`echo $options | jq -r .aomenc`
+            aomenco=${aomenco//[^a-zA-Z0-9_\- =]/}
+            ffmpego=`echo $options | jq -r .ffmpeg`
+            ffmpego=${ffmpego//[^a-zA-Z0-9_\- =:]/}
 
-
-
-    fps=`echo $job | jq -r .description.options.fps`
-    if [[ $fps = "null" ]]; then
-        fffps=""
-        aomfps=""
-    else
-        fpsrate=`echo $fps | jq -r '.[0]'`
-        fpsscale=`echo $fps | jq -r '.[1]'`
-        fpsv="$fpsrate/$fpsscale"
-        fffps="fps=fps=$fpsv -r $fpsv"
-        aomfps="--fps=$fpsv"
-    fi
+            pix_fmt=`echo $job | jq -r .pix_fmt`
+            if [[ $pix_fmt = "YV12" ]]; then
+                ffpix="yuv12p"
+                aompix="--yv12"
+            elif [[ $pix_fmt = "I420" ]]; then
+                ffpix="yuv420p"
+                aompix="--i420"
+            elif [[ $pix_fmt = "I422" ]]; then
+                ffpix="yuv422p"
+                aompix="--i422"
+            elif [[ $pix_fmt = "I444" ]]; then
+                ffpix="yuv444p"
+                aompix="--i444"
+            fi
 
 
-    two_pass=`echo $job | jq -r .description.options.two_pass`
 
-    if [[ $two_pass = true ]]; then
-        set +e
-        eval 'ffmpeg -nostats -hide_banner -loglevel warning \
-        -i "'$input'" '$ffmpego' -vf scale='$width':'$height','$fffps' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aomfps' '$aompix' '$aomenco' \
-        --pass=1 --passes=2 --fpf="'$input'.fpf" --ivf -o "'$input'.out.ivf"'
+            fps=`echo $options | jq -r .fps`
+            if [[ $fps = "null" ]]; then
+                fffps=""
+                aomfps=""
+            else
+                fpsrate=`echo $fps | jq -r '.[0]'`
+                fpsscale=`echo $fps | jq -r '.[1]'`
+                fpsv="$fpsrate/$fpsscale"
+                fffps="fps=fps=$fpsv -r $fpsv"
+                aomfps="--fps=$fpsv"
+            fi
 
-        retval=$?
-        if [ $retval -ne 0 ]; then
-            echo "Error running encode pass 1"
-            curl -s -L "$base_url"/edit_status/"$job_id"/error || true
-            echo ""
-            continue
-        fi
+            two_pass=`echo $options | jq -r .two_pass`
 
-        eval 'ffmpeg -nostats -hide_banner -loglevel warning \
-        -i "'$input'" '$ffmpego' -vf scale='$width':'$height','$fffps' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aomfps' '$aompix' '$aomenco' \
-        --pass=2 --passes=2 --fpf="'$input'.fpf" --ivf -o "'$input'.out.ivf"'
+            if [[ $two_pass = true ]]; then
+                set +e
+                eval 'ffmpeg -nostats -hide_banner -loglevel warning \
+                -i "'$input'" '$ffmpego' -vf scale='$width':'$height','$fffps' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aomfps' '$aompix' '$aomenco' \
+                --pass=1 --passes=2 --fpf="'$input'.fpf" --ivf -o "'$input'.out.ivf"'
 
-        retval=$?
-        if [ $retval -ne 0 ]; then
-            echo "Error running encode pass 2"
-            curl -s -L "$base_url"/edit_status/"$job_id"/error || true
-            echo ""
-            continue
-        fi
-        set -e
+                retval=$?
+                if [ $retval -ne 0 ]; then
+                    echo "Error running encode pass 1"
+                    curl -s -L "$base_url"/edit_status/"$job_id"/error || true
+                    echo ""
+                    continue
+                fi
 
-        echo "Deleting Source and Temporary files"
-        rm "$input" "$input".fpf
+                eval 'ffmpeg -nostats -hide_banner -loglevel warning \
+                -i "'$input'" '$ffmpego' -vf scale='$width':'$height','$fffps' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aomfps' '$aompix' '$aomenco' \
+                --pass=2 --passes=2 --fpf="'$input'.fpf" --ivf -o "'$input'.out.ivf"'
 
-    else
-        set +e
-        eval 'ffmpeg -nostats -hide_banner -loglevel warning \
-        -i "'$input'" '$ffmpego' -vf scale='$width':'$height','$fffps' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aomfps' '$aompix' '$aomenco' \
-        --passes=1 --fpf="'$input'.fpf" --ivf -o "'$input'.out.ivf"'
+                retval=$?
+                if [ $retval -ne 0 ]; then
+                    echo "Error running encode pass 2"
+                    curl -s -L "$base_url"/edit_status/"$job_id"/error || true
+                    echo ""
+                    continue
+                fi
+                set -e
 
-        retval=$?
-        if [ $retval -ne 0 ]; then
-            echo "Error running encode"
-            curl -s -L "$base_url"/edit_status/"$job_id"/error || true
-            echo ""
-            continue
-        fi
-        set -e
+                echo "Deleting Source and Temporary files"
+                rm "$input" "$input".fpf
 
-        echo "Deleting Source"
-        rm "$input"
-    fi
+            else
+                set +e
+                eval 'ffmpeg -nostats -hide_banner -loglevel warning \
+                -i "'$input'" '$ffmpego' -vf scale='$width':'$height','$fffps' -pix_fmt '$ffpix' -f yuv4mpegpipe - | aomenc - '$aomfps' '$aompix' '$aomenco' \
+                --passes=1 --fpf="'$input'.fpf" --ivf -o "'$input'.out.ivf"'
+
+                retval=$?
+                if [ $retval -ne 0 ]; then
+                    echo "Error running encode"
+                    curl -s -L "$base_url"/edit_status/"$job_id"/error || true
+                    echo ""
+                    continue
+                fi
+                set -e
+
+                echo "Deleting Source"
+                rm "$input"
+            fi
+            ;;
+        FFMPEG)
+                echo "Starting FFMPEG encode"
+                if [[ $two_pass = true ]]; then
+                    echo "Running in two-pass mode"
+                    
+                    options=`echo $job | jq -r .options.$etype`
+
+                    pix_fmt=`echo $options | jq -r .pix_fmt`
+                    tiles=`echo $options | jq -r .tiles`
+                    lag_in_frames=`echo $options | jq -r .lag_in_frames`
+
+                    set +e
+                    ffmpeg -i $input -c:v libaom-av1 -strict experimental -pass 1 -an -vf scale=$width:$height -pix_fmt $pix_fmt -tiles $tiles -lag-in-frames $lag_in_frames $flag_g -f ivf /dev/null
+                fi
+            ;;
 
     set +e
     curl -s -L "$base_url"/edit_status/"$job_id"/completed
