@@ -73,7 +73,7 @@ while true; do
 
     etype=`echo $job | jq -r '.description.options | keys | .[]'`
 
-    if [$etype != "FFMPEG"] || [$etype != "AOMENC" ]; then
+    if [$etype != "FFMPEG"] && [$etype != "AOMENC" ]; then
         echo "That's not a valid encoder!! Are you being attacked?"
     fi
 
@@ -85,7 +85,7 @@ while true; do
     options=`echo $job | jq .description.options.$etype`
 
     case $etype in
-        AOMENC)
+        "AOMENC")
             aomenco=`echo $options | jq -r .aomenc`
             aomenco=${aomenco//[^a-zA-Z0-9_\- =]/}
             ffmpego=`echo $options | jq -r .ffmpeg`
@@ -171,7 +171,7 @@ while true; do
                 rm "$input"
             fi
             ;;
-        FFMPEG)
+        "FFMPEG")
                 echo "Starting FFMPEG encode"
                 if [[ $two_pass = true ]]; then
                     echo "Running in two-pass mode"
@@ -183,7 +183,10 @@ while true; do
                     lag_in_frames=`echo $options | jq -r .lag_in_frames`
 
                     set +e
-                    ffmpeg -i $input -c:v libaom-av1 -strict experimental -pass 1 -an -vf scale=$width:$height -pix_fmt $pix_fmt -tiles $tiles -lag-in-frames $lag_in_frames $flag_g -f ivf /dev/null
+                    ffmpeg -i $input -c:v libaom-av1 -strict experimental -pass 1 -an \
+                        -vf scale=$width:$height -pix_fmt $pix_fmt \
+                        -tiles $tiles -lag-in-frames $lag_in_frames $flag_g \
+                        -f ivf /dev/null
                 fi
             ;;
 
