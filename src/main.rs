@@ -22,7 +22,7 @@ mod workunit;
 use workunit::WUnit;
 use workunit::EStatus;
 
-const VERSION: &str = "0.12.0";
+const VERSION: &str = "0.13.0";
 
 #[derive(Default, Debug)]
 struct SharedState {

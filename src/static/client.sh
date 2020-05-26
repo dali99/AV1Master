@@ -4,7 +4,7 @@ set -euo pipefail
 IFS=$'\n\t'
 
 base_url="$1"
-version="0.12.0"
+version="0.13.0"
 
 while true; do
     sleep 30
@@ -91,7 +91,7 @@ while true; do
             ffmpego=`echo $options | jq -r .ffmpeg`
             ffmpego=${ffmpego//[^a-zA-Z0-9_\- =:]/}
 
-            pix_fmt=`echo $job | jq -r .pix_fmt`
+            pix_fmt=`echo $options | jq -r .pix_fmt`
             if [[ $pix_fmt = "YV12" ]]; then
                 ffpix="yuv12p"
                 aompix="--yv12"
