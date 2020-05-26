@@ -1,6 +1,9 @@
 #![feature(proc_macro_hygiene, decl_macro)]
 
 #[macro_use] extern crate rocket;
+
+use serde::{Serialize, Deserialize};
+
 use rocket::State;
 use rocket::response::status::NotFound;
 use rocket::Data;
@@ -19,7 +22,7 @@ mod workunit;
 use workunit::WUnit;
 use workunit::EStatus;
 
-const VERSION: &str = "0.11.0";
+const VERSION: &str = "0.12.0";
 
 #[derive(Default, Debug)]
 struct SharedState {
@@ -36,6 +39,42 @@ curl -L {baseurl}/av1client > av1client && chmod +x ./av1client && ./av1client {
 #[get("/version")]
 fn version() -> &'static str {
     VERSION
+}
+
+#[get("/stats")]
+fn get_stats(shared: State<SharedState>) -> Json<Value> {
+
+    #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+    struct Stats {
+        queued: u32,
+        progress: u32,
+        completed: u32,
+        cancelled: u32,
+        error: u32,
+        length: u32
+    };
+
+    let list = shared.jobs.lock().unwrap().clone();
+    let mut stats: Stats = Stats {
+        queued: 0,
+        progress: 0,
+        completed: 0,
+        cancelled: 0,
+        error: 0,
+        length: 999
+    };
+
+    for job in list.values() {
+        match &job.status {
+            EStatus::Queued => stats.queued += 1,
+            EStatus::Reserved(a) => stats.progress += 1,
+            EStatus::Completed(a) => stats.completed += 1,
+            EStatus::Cancelled => stats.cancelled += 1,
+            EStatus::Error(a) => stats.error += 1
+        };
+    }
+
+    Json(serde_json::to_value(&stats).unwrap())
 }
 
 #[get("/get_jobs")]

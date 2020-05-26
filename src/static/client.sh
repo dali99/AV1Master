@@ -4,7 +4,7 @@ set -euo pipefail
 IFS=$'\n\t'
 
 base_url="$1"
-version="0.11.0"
+version="0.12.0"
 
 while true; do
     sleep 30
@@ -73,7 +73,7 @@ while true; do
 
     etype=`echo $job | jq -r '.description.options | keys | .[]'`
 
-    if [$etype != "FFMPEG"] && [$etype != "AOMENC" ]; then
+    if [ $etype != "FFMPEG" ] && [ $etype != "AOMENC" ]; then
         echo "That's not a valid encoder!! Are you being attacked?"
     fi
 
