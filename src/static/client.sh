@@ -171,8 +171,8 @@ while true; do
                 rm "$input"
             fi
             ;;
-        "FFMPEG")
-                echo "Starting FFMPEG encode"
+        "FFMPEGQ")
+                echo "Starting FFMPEG Q encode"
 
                 two_pass=`echo $options | jq -r .two_pass`
 
@@ -233,6 +233,110 @@ while true; do
                     continue
                 fi
             ;;
+        "FFMPEGVMAF")
+            echo "Starting FFMPEG VMAF encode"
+            
+            two_pass=`echo $options | jq -r .two_pass`
+
+            if [[ $two_pass = true ]]; then
+                echo "Running in two-pass mode"
+
+                pix_fmt=`echo $options | jq -r .pix_fmt`
+
+                b_v=`echo $options | jq -r .b_v`
+
+                tiles=`echo $options | jq -r .tiles`
+                lag_in_frames=`echo $options | jq -r .lag_in_frames`
+
+                gop=`echo $options | jq -r .gop`
+                if [[ $gop != "null" ]]; then
+                    flag_g="-g $gop"
+                else
+                    flag_g=""
+                fi
+
+                speed=`echo $options | jq -r .speed`
+
+                vmaf_target = `echo $options | jq -r .vmaf`
+                q_min=`echo $options | jq -r .q_min`
+                q_max=`echo $options | jq -r .q_max`
+                q="foo"
+                last_q="bar"
+                best="$q_min"
+                echo "Finding VMAF!"
+                while true; do
+                    echo "$q_min $q_max"
+                    q=`echo "($q_min + $q_max)/2" | bc`
+                    if [[ $q == $last_q ]]; then
+                        echo "highest q over target is:"
+                        echo $best;
+                    fi;
+                    last_q="$q"
+
+                    echo "trying q: $q"
+
+                    ffmpeg -threads 1 -y -i "$input" -c:v libaom-av1 -strict experimental -an \
+                        -vf scale=$width':'$height -pix_fmt $pix_fmt \
+                        -crf $q -b:v $b_v \
+                        -tiles $tiles -lag-in-frames $lag_in_frames \
+                        -cpu-used 5 -f ivf $input.out.ivf >/dev/null
+                    ffmpeg -threads 1 -r 24 -i $input.out.ivf -r 24 -i $input -filter_complex "[0:v][1:v]libvmaf=log_fmt=json:log_path=$input.vmaf" -f null - >/dev/null
+
+                    vmaf=`cat $input.vmaf | jq -r '."VMAF score"'`
+                    echo "current VMAF = $vmaf"
+
+                    result=`echo "$vmaf >= $target_vmaf" | bc`
+
+                    if [[ $result -eq "1" ]]; then
+                        echo "Found value over target! $q = $vmaf" >&2
+                        crf_min=`echo $q - 1 | bc`
+                        if [[ $q -gt $best ]]; then
+                            echo "Found better value! $q" >&2
+                            best=$q
+                        fi
+                    elif [[ $result -eq "0" ]]; then
+                        crf_max=`echo $q + 1 | bc`
+                    fi
+                done;
+                rm $input.out.ivf
+                rm $input.vmaf
+
+                set +e
+                ffmpeg -y -i $input -c:v libaom-av1 -strict experimental -pass 1 -an \
+                    -vf scale=$width:$height -pix_fmt $pix_fmt \
+                    -crf $best -b:v $b_v \
+                    -tiles $tiles -lag-in-frames $lag_in_frames $flag_g \
+                    -cpu-used $speed -f ivf /dev/null
+                retval=$?
+                if [ $retval -ne 0 ]; then
+                    echo "Error running encode pass 1"
+                    curl -s -L "$base_url"/edit_status/"$job_id"/error || true
+                    echo ""
+                    continue
+                fi
+
+                ffmpeg -y -i $input -c:v libaom-av1 -strict experimental -pass 2 -an \
+                    -vf scale=$width:$height -pix_fmt $pix_fmt \
+                    -crf $best -b:v $b_v \
+                    -tiles $tiles -lag-in-frames $lag_in_frames $flag_g \
+                    -cpu-used $speed -f ivf $input.out.ivf
+                retval=$?
+                if [ $retval -ne 0 ]; then
+                    echo "Error running encode pass 2"
+                    curl -s -L "$base_url"/edit_status/"$job_id"/error || true
+                    echo ""
+                    continue
+                fi
+
+
+                set -e
+
+                echo "Deleting Source and Temporary files"
+                rm "$input" "ffmpeg2pass-0.log"
+            else
+                echo "one-pass mode is not supported!"
+                continue
+            fi
         esac
 
     set +e

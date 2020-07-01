@@ -52,7 +52,8 @@ impl WDesc {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum EOptions {
     AOMENC(AomencO),
-    FFMPEG(FffmpegO)
+    FFMPEGQ(FffmpegOQ),
+    FFMPEGVMAF(FffmpegOVMAF)
 }
 impl Default for EOptions {
     fn default() -> Self {
@@ -82,7 +83,7 @@ impl Default for AomencO {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct FffmpegO {
+pub struct FffmpegOQ {
     pub two_pass: bool,
     pub crf: u8,
     pub b_v: String,
@@ -92,7 +93,35 @@ pub struct FffmpegO {
     pub tiles: String,
     pub speed: u8
 }
-impl Default for FffmpegO {
+impl Default for FffmpegOQ {
+    fn default() -> Self {
+        FffmpegO {
+            two_pass: true,
+            crf: 30,
+            b_v: "0".to_string(),
+            lag_in_frames: 35,
+            gop: Option::None,
+            pix_fmt: "yuv420p10le".to_string(),
+            tiles: "1x1".to_string(),
+            speed: 4
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct FffmpegOVMAF {
+    pub two_pass: bool,
+    pub vmaf: u8,
+    pub crf_min: u8,
+    pub crf_max: u8,
+    pub b_v: String,
+    pub lag_in_frames: u8,
+    pub gop: Option<u16>,
+    pub pix_fmt: String,
+    pub tiles: String,
+    pub speed: u8
+}
+impl Default for FffmpegOVMAF {
     fn default() -> Self {
         FffmpegO {
             two_pass: true,

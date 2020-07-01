@@ -111,7 +111,6 @@ fn get_job(id: Uuid, shared: State<SharedState>) -> Result<Json<Value>, NotFound
 
 
 pub struct RealIP(std::net::IpAddr);
-
 impl<'a, 'r> rocket::request::FromRequest<'a, 'r> for RealIP {
     type Error = ();
     fn from_request(request: &'a rocket::Request<'r>) -> rocket::request::Outcome<Self, Self::Error> {
